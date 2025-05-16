@@ -1,6 +1,6 @@
 # AI4PAIN 2025 Feature Extraction
 
-This project provides a feature extraction toolkit for the AI4PAIN 2025 Challenge, focusing on physiological signals (EDA, BVP, RESP, SpO₂) for pain assessment.
+A feature extraction toolkit for the AI4PAIN 2025 Challenge that analyzes physiological signals (EDA, BVP, RESP, SpO₂) for pain assessment. The toolkit calculates permutation entropy, complexity, and Fisher complexity features for signals under different pain states.
 
 ## Project Structure
 
@@ -8,88 +8,73 @@ This project provides a feature extraction toolkit for the AI4PAIN 2025 Challeng
 AI4Pain/
 ├── data/              # Data directory
 │   ├── train/         # Training data files
+│   │   ├── Bvp/       # Blood Volume Pulse signals
+│   │   ├── Eda/       # Electrodermal Activity signals
+│   │   ├── Resp/      # Respiration signals
+│   │   └── SpO2/      # Blood Oxygen Saturation signals
 │   └── test/          # Test data files
+│       ├── Bvp/       # Blood Volume Pulse signals
+│       ├── Eda/       # Electrodermal Activity signals
+│       ├── Resp/      # Respiration signals
+│       └── SpO2/      # Blood Oxygen Saturation signals
 ├── logs/              # Log files directory
 ├── results/           # Output directory for feature tables
 ├── src/               # Source code
 │   └── feature_extraction.py  # Main feature extraction code
 ├── requirements.txt   # Python dependencies
 ├── README.md          # This file
+├── .gitignore         # Git ignore file
 └── run_extraction.py  # Convenience script to run extraction
 ```
 
-## Setup
+## Data Organization
 
-1. Create a virtual environment (recommended):
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows, use: venv\Scripts\activate
-   ```
+The project processes physiological signals organized by type:
 
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+- **Blood Volume Pulse (BVP)**: Measures changes in blood volume in peripheral tissues
+- **Electrodermal Activity (EDA)**: Records skin conductance which varies with sweat gland activity
+- **Respiration (RESP)**: Monitors breathing patterns and rate
+- **Blood Oxygen Saturation (SpO₂)**: Measures oxygen levels in the blood
 
-3. Place your CSV files in the appropriate directories:
-   - Training data: `data/train/`
-   - Test data: `data/test/`
+## Feature Extraction Process
 
-## Running Feature Extraction
+The toolkit implements a multi-step feature extraction process:
 
-To run the feature extraction with default settings:
+1. **Signal Processing**: Reads physiological signals from CSV files organized by signal type
+2. **Feature Calculation**:
+   - **Permutation Entropy (PE)**: Quantifies the complexity/unpredictability of time series data
+   - **Complexity Measure**: Derived from permutation entropy to assess system complexity
+   - **Fisher Information**: Measures the amount of information a signal carries about pain states
+3. **Parameter Exploration**: Analyzes each signal with multiple embedding dimensions (4-5) and time delays (1-3)
+4. **State Identification**: Extracts pain state information (baseline, low, high) from signal metadata
 
-```bash
-python run_extraction.py
-```
+All processing details are recorded in log files for traceability and debugging.
 
-To include PE verification column in the output (for debugging):
+## Generated Features
 
-```bash
-python run_extraction.py --verify
-```
+The extraction generates comprehensive feature tables with the following information:
 
-## Output
+| Column | Description |
+|--------|-------------|
+| `file_name` | Source CSV file name |
+| `signal` | Signal column identifier |
+| `signal_type` | Type of signal (Bvp, Eda, Resp, SpO2) |
+| `signallength` | Number of data points in the signal |
+| `pe` | Permutation entropy value |
+| `comp` | Complexity value |
+| `fisher` | Fisher complexity value |
+| `dimension` | Embedding dimension used (4 or 5) |
+| `tau` | Time delay used (1, 2, or 3) |
+| `state` | Pain state (baseline, low, high) |
 
-The script will generate three CSV files in the `results` directory:
+Optionally, verification columns can be included to validate calculation methods.
 
-1. `features_train.csv` - Features extracted from training data
-2. `features_test.csv` - Features extracted from test data
-3. `features_complete.csv` - Combined features from both datasets
+## Technical Implementation
 
-The resulting table contains the following columns:
+The toolkit is implemented in Python using:
 
-- `file_name`: Name of the source CSV file
-- `signal`: Signal column name from the source file
-- `signallength`: Number of data points in the signal
-- `pe`: Permutation entropy value
-- `comp`: Complexity value
-- `fisher`: Fisher complexity value
-- `dimension`: Embedding dimension used (4 or 5)
-- `tau`: Time delay used (1, 2, or 3)
-- `state`: Pain state extracted from signal name (baseline, low, high)
+- **NumPy**: For efficient numerical operations on signal data
+- **Pandas**: For data manipulation and CSV handling
+- **OrdPy**: For permutation entropy and complexity calculations
 
-When run with the `--verify` flag, an additional column `pe_fisher` is included for verification.
-
-## Logging
-
-All processing details and errors are logged to `logs/feature_extraction.log`. The log file is reset at the start of each run.
-
-## Implementation Details
-
-The feature extraction process:
-
-1. Reads all CSV files from the data directories
-2. For each signal column in each file:
-   - Extracts the signal data
-   - Applies permutation entropy and complexity calculations with different dimension and tau values
-   - Determines the pain state from the signal name
-3. Compiles all results into feature tables
-4. Saves the results as CSV files
-
-## Requirements
-
-- Python 3.7+
-- numpy
-- pandas
-- ordpy
+The processing pipeline is designed to handle large datasets efficiently with comprehensive error handling and logging to ensure data quality.

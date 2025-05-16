@@ -3,6 +3,19 @@
 AI4PAIN Feature Extraction Runner
 --------------------------------
 This script runs the feature extraction process for the AI4PAIN 2025 Challenge.
+
+Expected directory structure:
+  data/
+    train/
+      Bvp/      # Blood Volume Pulse signals
+      Eda/      # Electrodermal Activity signals
+      Resp/     # Respiration signals
+      SpO2/     # Blood Oxygen Saturation signals
+    test/
+      Bvp/      # Blood Volume Pulse signals
+      Eda/      # Electrodermal Activity signals
+      Resp/     # Respiration signals
+      SpO2/     # Blood Oxygen Saturation signals
 """
 
 import argparse

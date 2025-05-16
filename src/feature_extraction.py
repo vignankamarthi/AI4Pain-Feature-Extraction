@@ -118,12 +118,22 @@ def process_signal(signal_data, dimensions=[4, 5], taus=[1, 2, 3]):
 
 def process_files(data_dir):
     """
-    Process all CSV files in the given directory.
+    Process all CSV files in the given directory and its subdirectories.
+    The directory structure is expected to be:
+    data_dir/
+        Bvp/
+            *.csv
+        Eda/
+            *.csv
+        Resp/
+            *.csv
+        SpO2/
+            *.csv
     
     Parameters
     ----------
     data_dir : str
-        Path to the directory containing CSV files to process.
+        Path to the directory containing subdirectories with CSV files to process.
     
     Returns
     -------
@@ -140,22 +150,39 @@ def process_files(data_dir):
             print(f"ERROR: Directory not found: {data_dir}")
             return all_results
         
-        # Get all CSV files
+        # Get subdirectories (Bvp, Eda, Resp, SpO2)
         try:
-            csv_files = [f for f in os.listdir(data_dir) if f.endswith('.csv')]
-            logger.info(f"Found {len(csv_files)} CSV files in {data_dir}")
-            print(f"Found {len(csv_files)} CSV files in {data_dir}")
+            subdirs = [d for d in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, d))]
+            logger.info(f"Found {len(subdirs)} subdirectories in {data_dir}: {subdirs}")
+            print(f"Found {len(subdirs)} subdirectories in {data_dir}: {subdirs}")
         except Exception as e:
             logger.error(f"Error listing directory {data_dir}: {str(e)}")
             logger.error(traceback.format_exc())
-            print(f"ERROR: Could not list files in {data_dir}")
+            print(f"ERROR: Could not list subdirectories in {data_dir}")
             return all_results
         
-        # Process each file
-        for file_idx, file_name in enumerate(csv_files):
-            file_path = os.path.join(data_dir, file_name)
-            logger.info(f"Processing file: {file_name}")
-            print(f"Processing file {file_idx+1}/{len(csv_files)}: {file_name}")
+        # Process each subdirectory
+        total_csv_files = 0
+        for subdir in subdirs:
+            subdir_path = os.path.join(data_dir, subdir)
+            
+            # Get all CSV files in this subdirectory
+            try:
+                csv_files = [f for f in os.listdir(subdir_path) if f.endswith('.csv')]
+                logger.info(f"Found {len(csv_files)} CSV files in {subdir_path}")
+                print(f"Found {len(csv_files)} CSV files in {subdir_path}")
+                total_csv_files += len(csv_files)
+            except Exception as e:
+                logger.error(f"Error listing directory {subdir_path}: {str(e)}")
+                logger.error(traceback.format_exc())
+                print(f"ERROR: Could not list files in {subdir_path}")
+                continue
+        
+            # Process each file in this subdirectory
+            for file_idx, file_name in enumerate(csv_files):
+                file_path = os.path.join(subdir_path, file_name)
+                logger.info(f"Processing file: {subdir}/{file_name}")
+                print(f"Processing file {file_idx+1}/{len(csv_files)} from {subdir}: {file_name}")
             
             try:
                 # Read the CSV file
@@ -200,10 +227,11 @@ def process_files(data_dir):
                             logger.error(traceback.format_exc())
                             continue
                         
-                        # Add file and signal information to each result
+                        # Add file, signal type and signal information to each result
                         for result in results:
                             result['file_name'] = file_name
                             result['signal'] = column
+                            result['signal_type'] = subdir
                             result['state'] = state
                             
                         # Add to overall results list
@@ -213,7 +241,7 @@ def process_files(data_dir):
                         logger.error(f"Error processing column {column} in file {file_name}: {str(e)}")
                         logger.error(traceback.format_exc())
                 
-                print(f"  Processed {signal_count} signals in {file_name}")
+                print(f"  Processed {signal_count} signals in {subdir}/{file_name}")
                     
             except Exception as e:
                 logger.error(f"Error processing file {file_name}: {str(e)}")
@@ -225,8 +253,8 @@ def process_files(data_dir):
         logger.error(traceback.format_exc())
         print(f"ERROR: Unexpected error in processing files")
     
-    logger.info(f"Total processed results: {len(all_results)}")
-    print(f"Completed processing with {len(all_results)} total results")
+    logger.info(f"Total processed results: {len(all_results)} from {total_csv_files} files")
+    print(f"Completed processing with {len(all_results)} total results from {total_csv_files} files")
     return all_results
 
 def generate_feature_table(all_results, output_file, include_pe_verification=False):
@@ -270,7 +298,7 @@ def generate_feature_table(all_results, output_file, include_pe_verification=Fal
         try:
             if include_pe_verification:
                 ordered_columns = [
-                    'file_name', 'signal', 'signallength', 'pe', 'pe_fisher', 
+                    'file_name', 'signal', 'signal_type', 'signallength', 'pe', 'pe_fisher', 
                     'comp', 'fisher', 'dimension', 'tau', 'state'
                 ]
                 logger.info("Including PE verification column in output")
@@ -279,7 +307,7 @@ def generate_feature_table(all_results, output_file, include_pe_verification=Fal
                 # Remove verification column if not needed
                 result_df = result_df.drop(columns=['pe_fisher'])
                 ordered_columns = [
-                    'file_name', 'signal', 'signallength', 'pe', 
+                    'file_name', 'signal', 'signal_type', 'signallength', 'pe', 
                     'comp', 'fisher', 'dimension', 'tau', 'state'
                 ]
                 logger.info("Excluded PE verification column from output")
@@ -338,8 +366,8 @@ def main(include_pe_verification=False):
         logger.info("Starting feature extraction process")
         
         # Set paths
-        train_dir = 'data/train'
-        test_dir = 'data/test'
+        train_dir = 'data/train'  # Contains subfolders for Bvp, Eda, Resp, SpO2
+        test_dir = 'data/test'    # Contains subfolders for Bvp, Eda, Resp, SpO2
         output_dir = 'results'
         
         # Create output directory if it doesn't exist
