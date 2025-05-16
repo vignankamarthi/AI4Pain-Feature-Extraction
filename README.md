@@ -2,6 +2,31 @@
 
 A feature extraction toolkit for the AI4PAIN 2025 Challenge that analyzes physiological signals (EDA, BVP, RESP, SpO₂) for pain assessment. The toolkit calculates permutation entropy, complexity, and Fisher complexity features for signals under different pain states.
 
+## Setup and Usage
+
+This project uses standard Python package management. To set up and run:
+
+```bash
+# Create a virtual environment
+python -m venv venv
+
+# Activate the environment
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the feature extraction
+python run_extraction.py
+```
+
+Additional options:
+
+```bash
+# To include PE verification columns in output
+python run_extraction.py --verify
+```
+
 ## Project Structure
 
 ```
