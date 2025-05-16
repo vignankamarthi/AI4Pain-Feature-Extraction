@@ -4,7 +4,7 @@ A feature extraction toolkit for the AI4PAIN 2025 Challenge that analyzes physio
 
 ## Setup and Usage
 
-This project uses standard Python package management. To set up and run:
+This project uses standard Python package management with a simple manual setup:
 
 ```bash
 # Create a virtual environment
@@ -17,14 +17,14 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 # Run the feature extraction
-python run_extraction.py
+python main.py
 ```
 
 Additional options:
 
 ```bash
 # To include PE verification columns in output
-python run_extraction.py --verify
+python main.py --verify
 ```
 
 ## Project Structure
@@ -49,7 +49,7 @@ AI4Pain/
 ├── requirements.txt   # Python dependencies
 ├── README.md          # This file
 ├── .gitignore         # Git ignore file
-└── run_extraction.py  # Convenience script to run extraction
+└── main.py            # Simple entry point script for running extraction
 ```
 
 ## Data Organization
