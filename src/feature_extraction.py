@@ -9,8 +9,6 @@ from ordpy import complexity_entropy, fisher_shannon
 from datetime import datetime
 from tqdm import tqdm
 
-# TODO Read through entire feature_extraction file
-# TODO Read main.py file
 # TODO Read ReadMe file
 # TODO Create a "view_results.py file to visualize the results as a Pandas DataFrame"
 # TODO Understand the data points we are using

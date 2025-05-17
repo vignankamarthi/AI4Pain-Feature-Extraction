@@ -12,7 +12,6 @@ Manual setup:
 """
 
 import argparse
-import sys
 import os
 from src.feature_extraction import main as run_feature_extraction
 
@@ -20,7 +19,7 @@ def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description='AI4PAIN Feature Extraction')
     parser.add_argument('--verify', action='store_true', 
-                        help='Include PE verification column in output')
+                        help='Include Fisher PE verification column in output')
     return parser.parse_args()
 
 if __name__ == "__main__":
