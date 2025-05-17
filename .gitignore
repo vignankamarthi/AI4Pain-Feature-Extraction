@@ -1,22 +1,40 @@
-# Data files - ignore all data directories content but keep the directory structure
-data/train/*/*.csv
-data/test/*/*.csv
+# Data directories
+/data/train/*
+/data/test/*
+
+# Preserve data directory structure
+!/data/train/.gitkeep
+!/data/test/.gitkeep
+!/data/train/Bvp/.gitkeep
+!/data/train/Eda/.gitkeep
+!/data/train/Resp/.gitkeep
+!/data/train/SpO2/.gitkeep
+!/data/test/Bvp/.gitkeep
+!/data/test/Eda/.gitkeep
+!/data/test/Resp/.gitkeep
+!/data/test/SpO2/.gitkeep
 
 # Results
-results/
+/results/*
+!/results/.gitkeep
 
 # Logs
-logs/
+/logs/*
+!/logs/.gitkeep
 
-# Python
+# Python virtual environment
+/venv/
+/.env/
+/.venv/
+/ENV/
+/env/
+
+# Python cache files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-venv/
-ENV/
-env/
 build/
 develop-eggs/
 dist/
@@ -40,6 +58,8 @@ wheels/
 *.swo
 *~
 
-# OS specific files
+# OS files
 .DS_Store
 Thumbs.db
+.directory
+.Trash-*

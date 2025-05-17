@@ -6,7 +6,7 @@ Run this script to perform feature extraction on physiological signals.
 
 Manual setup:
 1. Create a virtual environment: python -m venv venv
-2. Activate it: source venv/bin/activate (or venv\Scripts\activate on Windows)
+2. Activate it: source venv/bin/activate (or venv\\Scripts\\activate on Windows)
 3. Install dependencies: pip install -r requirements.txt
 4. Run this script: python main.py [--verify]
 """

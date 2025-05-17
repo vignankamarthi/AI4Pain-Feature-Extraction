@@ -1,4 +1,4 @@
 # Core dependencies for feature extraction
 numpy
 pandas
-ordpy==1.0.1
+ordpy>=1.1.0

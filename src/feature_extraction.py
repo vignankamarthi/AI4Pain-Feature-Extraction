@@ -183,70 +183,70 @@ def process_files(data_dir):
                 file_path = os.path.join(subdir_path, file_name)
                 logger.info(f"Processing file: {subdir}/{file_name}")
                 print(f"Processing file {file_idx+1}/{len(csv_files)} from {subdir}: {file_name}")
-            
-            try:
-                # Read the CSV file
-                df = pd.read_csv(file_path)
-                logger.info(f"Successfully read {file_name}")
                 
-                # Process each signal column
-                signal_count = 0
-                for column in df.columns:
-                    # Skip any non-signal columns (like timestamps)
-                    if not column.startswith(file_name.split('.')[0]):
-                        continue
-                        
-                    signal_count += 1
-                    if signal_count % 10 == 0:
-                        print(f"  Processing signal {signal_count}/{len(df.columns)}")
+                try:
+                    # Read the CSV file
+                    df = pd.read_csv(file_path)
+                    logger.info(f"Successfully read {file_name}")
                     
-                    logger.info(f"Processing signal: {column}")
-                    
-                    try:
-                        # Extract signal data
-                        signal_data = df[column].values
-                        
-                        # Extract state from signal name (text between underscores)
-                        try:
-                            parts = column.split('_')
-                            if len(parts) >= 2:
-                                state = parts[1].lower()  # Convert state to lowercase
-                            else:
-                                state = "unknown"
-                                logger.warning(f"Could not extract state from signal name: {column}")
-                        except Exception as e:
-                            state = "unknown"
-                            logger.error(f"Error extracting state from signal {column}: {str(e)}")
-                            
-                        # Process the signal
-                        try:
-                            results = process_signal(signal_data)
-                            logger.info(f"Successfully processed signal {column}")
-                        except Exception as e:
-                            logger.error(f"Error processing signal {column}: {str(e)}")
-                            logger.error(traceback.format_exc())
+                    # Process each signal column
+                    signal_count = 0
+                    for column in df.columns:
+                        # Skip any non-signal columns (like timestamps)
+                        if not column.startswith(file_name.split('.')[0]):
                             continue
-                        
-                        # Add file, signal type and signal information to each result
-                        for result in results:
-                            result['file_name'] = file_name
-                            result['signal'] = column
-                            result['signal_type'] = subdir
-                            result['state'] = state
                             
-                        # Add to overall results list
-                        all_results.extend(results)
+                        signal_count += 1
+                        if signal_count % 10 == 0:
+                            print(f"  Processing signal {signal_count}/{len(df.columns)}")
                         
-                    except Exception as e:
-                        logger.error(f"Error processing column {column} in file {file_name}: {str(e)}")
-                        logger.error(traceback.format_exc())
-                
-                print(f"  Processed {signal_count} signals in {subdir}/{file_name}")
+                        logger.info(f"Processing signal: {column}")
+                        
+                        try:
+                            # Extract signal data
+                            signal_data = df[column].values
+                            
+                            # Extract state from signal name (text between underscores)
+                            try:
+                                parts = column.split('_')
+                                if len(parts) >= 2:
+                                    state = parts[1].lower()  # Convert state to lowercase
+                                else:
+                                    state = "unknown"
+                                    logger.warning(f"Could not extract state from signal name: {column}")
+                            except Exception as e:
+                                state = "unknown"
+                                logger.error(f"Error extracting state from signal {column}: {str(e)}")
+                                
+                            # Process the signal
+                            try:
+                                results = process_signal(signal_data)
+                                logger.info(f"Successfully processed signal {column}")
+                            except Exception as e:
+                                logger.error(f"Error processing signal {column}: {str(e)}")
+                                logger.error(traceback.format_exc())
+                                continue
+                            
+                            # Add file, signal type and signal information to each result
+                            for result in results:
+                                result['file_name'] = file_name
+                                result['signal'] = column
+                                result['signal_type'] = subdir
+                                result['state'] = state
+                                
+                            # Add to overall results list
+                            all_results.extend(results)
+                            
+                        except Exception as e:
+                            logger.error(f"Error processing column {column} in file {file_name}: {str(e)}")
+                            logger.error(traceback.format_exc())
                     
-            except Exception as e:
-                logger.error(f"Error processing file {file_name}: {str(e)}")
-                logger.error(traceback.format_exc())
-                print(f"ERROR: Failed to process file {file_name}")
+                    print(f"  Processed {signal_count} signals in {subdir}/{file_name}")
+                        
+                except Exception as e:
+                    logger.error(f"Error processing file {file_name}: {str(e)}")
+                    logger.error(traceback.format_exc())
+                    print(f"ERROR: Failed to process file {file_name}")
     
     except Exception as e:
         logger.error(f"Unexpected error in process_files: {str(e)}")
