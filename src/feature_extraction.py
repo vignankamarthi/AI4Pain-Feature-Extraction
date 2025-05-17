@@ -22,7 +22,7 @@ from tqdm import tqdm
 # Set up logging
 def setup_logging():
     """
-    Configure logging to write only to file.
+    Configure logging to write to the feature_extraction file.
     The log file is reset at each run.
 
     Returns
@@ -57,14 +57,13 @@ def setup_logging():
     return logger
 
 
-# Global logger
+# Initialize the Global logger
 logger = None
 
 
 def process_single_dimension_tau(signal_data, dim, tau):
     """
-    Calculate metrics for a single dimension-tau combination with improved handling
-    of invalid values.
+    Calculate metrics for a single dimension-tau combination and replace invalid values with NaN. 
 
     Parameters
     ----------
@@ -199,7 +198,7 @@ def process_signal(signal_data, dimensions=[1, 2], taus=[1, 2, 3]):
     signal_data : array_like
         The signal data to process.
     dimensions : list, optional
-        List of embedding dimensions to use for calculations, by default [4, 5].
+        List of embedding dimensions to use for calculations, by default [1, 2].
     taus : list, optional
         List of time delays to use for calculations, by default [1, 2, 3].
 
