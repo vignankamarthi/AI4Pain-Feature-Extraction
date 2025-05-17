@@ -1,6 +1,6 @@
 # AI4PAIN 2025 Feature Extraction
 
-A feature extraction toolkit for the AI4PAIN 2025 Challenge that analyzes physiological signals (EDA, BVP, RESP, SpO₂) for pain assessment. The toolkit calculates permutation entropy, complexity, and Fisher complexity features for signals under different pain states.
+A feature extraction tool for the AI4PAIN 2025 Challenge that analyzes physiological signals (EDA, BVP, RESP, SpO₂) for pain assessment. The tool calculates permutation entropy, complexity, and Fisher complexity features for signals under different pain states.
 
 ## Setup and Usage
 
@@ -23,7 +23,7 @@ python main.py
 Additional options:
 
 ```bash
-# To include PE verification columns in output
+# To include Fisher PE verification columns in output
 python main.py --verify
 ```
 
@@ -88,15 +88,15 @@ The extraction generates comprehensive feature tables with the following informa
 | `pe` | Permutation entropy value |
 | `comp` | Complexity value |
 | `fisher` | Fisher complexity value |
-| `dimension` | Embedding dimension used (4 or 5) |
+| `dimension` | Embedding dimension used (1 or 2) |
 | `tau` | Time delay used (1, 2, or 3) |
 | `state` | Pain state (baseline, low, high) |
 
-Optionally, verification columns can be included to validate calculation methods.
+Optionally, Fisher PE columns can be included to validate Fisher PE ≈ Complexity PE.
 
 ## Technical Implementation
 
-The toolkit is implemented in Python using:
+The tool is implemented in Python using:
 
 - **NumPy**: For efficient numerical operations on signal data
 - **Pandas**: For data manipulation and CSV handling

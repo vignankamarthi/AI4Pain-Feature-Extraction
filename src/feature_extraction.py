@@ -9,10 +9,11 @@ from ordpy import complexity_entropy, fisher_shannon
 from datetime import datetime
 from tqdm import tqdm
 
-# TODO Read ReadMe file
+# TODO Create terminal commands in main.py to also choose the dimensions and taus
 # TODO Create a "view_results.py file to visualize the results as a Pandas DataFrame"
 # TODO Understand the data points we are using
 # TODO Add valuable statiscal parameters and information to the view_results.py file
+# TODO Finalize README
 # TODO Finalize GitHub repository
 # TODO Send full report to Sri
 
@@ -61,7 +62,7 @@ logger = None
 
 def process_single_dimension_tau(signal_data, dim, tau):
     """
-    Calculate metrics for a single dimension-tau combination and replace invalid values with NaN. 
+    Calculate metrics for a single dimension-tau combination and replace invalid values with NaN.
 
     Parameters
     ----------
