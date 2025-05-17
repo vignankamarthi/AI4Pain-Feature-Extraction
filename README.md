@@ -25,6 +25,15 @@ Additional options:
 ```bash
 # To include Fisher PE verification columns in output
 python main.py --verify
+
+# To use custom embedding dimensions (default is 1,2)
+python main.py --dimensions 3,4,5
+
+# To use custom time delays (default is 1,2,3)
+python main.py --taus 1,3,5
+
+# Combining options
+python main.py --verify --dimensions 3,4 --taus 2,4
 ```
 
 ## Project Structure

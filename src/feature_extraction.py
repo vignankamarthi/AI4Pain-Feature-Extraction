@@ -260,7 +260,7 @@ def count_total_files(data_dir):
     return total_files
 
 
-def process_files(data_dir):
+def process_files(data_dir, dimensions=[1, 2], taus=[1, 2, 3]):
     """
     Process all CSV files in the given directory and its subdirectories.
     The directory structure is expected to be:
@@ -278,6 +278,10 @@ def process_files(data_dir):
     ----------
     data_dir : str
         Path to the directory containing subdirectories with CSV files to process.
+    dimensions : list, optional
+        List of embedding dimensions to use for calculations, by default [1, 2].
+    taus : list, optional
+        List of time delays to use for calculations, by default [1, 2, 3].
 
     Returns
     -------
@@ -393,7 +397,7 @@ def process_files(data_dir):
 
                             # Process the signal
                             try:
-                                results = process_signal(signal_data)
+                                results = process_signal(signal_data, dimensions=dimensions, taus=taus)
                                 logger.info(f"Successfully processed signal {column}")
                             except Exception as e:
                                 logger.error(
@@ -571,7 +575,7 @@ def generate_feature_table(all_results, output_file, include_pe_verification=Fal
         return None
 
 
-def main(include_pe_verification=False):
+def main(include_pe_verification=False, dimensions=[1, 2], taus=[1, 2, 3]):
     """
     Main function to process data and generate feature tables.
 
@@ -580,6 +584,10 @@ def main(include_pe_verification=False):
     include_pe_verification : bool, optional
         Whether to include PE values from fisher_shannon for verification
         in the output tables, by default False.
+    dimensions : list, optional
+        List of embedding dimensions to use for calculations, by default [1, 2].
+    taus : list, optional
+        List of time delays to use for calculations, by default [1, 2, 3].
     """
     global logger
     # Set up logging
@@ -610,7 +618,7 @@ def main(include_pe_verification=False):
         # Process training data
         print("\nProcessing training data...")
         logger.info("Processing training data...")
-        train_results = process_files(train_dir)
+        train_results = process_files(train_dir, dimensions=dimensions, taus=taus)
         main_progress.update(
             1
         )  # Update main progress bar after training data processing
@@ -641,7 +649,7 @@ def main(include_pe_verification=False):
         # Process test data
         print("\nProcessing test data...")
         logger.info("Processing test data...")
-        test_results = process_files(test_dir)
+        test_results = process_files(test_dir, dimensions=dimensions, taus=taus)
         main_progress.update(1)  # Update main progress bar after test data processing
 
         # Force garbage collection after processing test data

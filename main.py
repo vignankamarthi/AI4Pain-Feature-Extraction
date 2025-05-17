@@ -20,6 +20,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description='AI4PAIN Feature Extraction')
     parser.add_argument('--verify', action='store_true', 
                         help='Include Fisher PE verification column in output')
+    parser.add_argument('--dimensions', type=str, default='1,2',
+                        help='Comma-separated list of embedding dimensions (default: 1,2)')
+    parser.add_argument('--taus', type=str, default='1,2,3',
+                        help='Comma-separated list of time delays (default: 1,2,3)')
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -33,4 +37,13 @@ if __name__ == "__main__":
         
     # Run the feature extraction
     args = parse_args()
-    run_feature_extraction(include_pe_verification=args.verify)
+    
+    # Parse dimension and tau values
+    dimensions = [int(d) for d in args.dimensions.split(',')]
+    taus = [int(t) for t in args.taus.split(',')]
+    
+    run_feature_extraction(
+        include_pe_verification=args.verify,
+        dimensions=dimensions,
+        taus=taus
+    )
