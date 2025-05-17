@@ -5,6 +5,7 @@ import logging
 import traceback
 from ordpy import complexity_entropy, fisher_shannon
 from datetime import datetime
+from tqdm import tqdm
 
 # Set up logging
 def setup_logging():
@@ -116,6 +117,17 @@ def process_signal(signal_data, dimensions=[4, 5], taus=[1, 2, 3]):
             
     return results
 
+def count_total_files(data_dir):
+    """Count the total number of CSV files in the data directory for progress tracking."""
+    total_files = 0
+    if not os.path.exists(data_dir):
+        return total_files
+        
+    for root, dirs, files in os.walk(data_dir):
+        total_files += sum(1 for f in files if f.endswith('.csv'))
+        
+    return total_files
+
 def process_files(data_dir):
     """
     Process all CSV files in the given directory and its subdirectories.
@@ -161,6 +173,13 @@ def process_files(data_dir):
             print(f"ERROR: Could not list subdirectories in {data_dir}")
             return all_results
         
+        # Count total files for progress tracking
+        total_files = count_total_files(data_dir)
+        print(f"Found {total_files} total CSV files to process")
+        
+        # Set up progress bar for overall file processing
+        overall_progress = tqdm(total=total_files, desc="Overall Progress", unit="file")
+        
         # Process each subdirectory
         total_csv_files = 0
         for subdir in subdirs:
@@ -177,12 +196,14 @@ def process_files(data_dir):
                 logger.error(traceback.format_exc())
                 print(f"ERROR: Could not list files in {subdir_path}")
                 continue
+            
+            # Create a progress bar for this subdirectory
+            subdir_progress = tqdm(csv_files, desc=f"Processing {subdir}", unit="file", leave=False)
         
             # Process each file in this subdirectory
-            for file_idx, file_name in enumerate(csv_files):
+            for file_name in subdir_progress:
                 file_path = os.path.join(subdir_path, file_name)
                 logger.info(f"Processing file: {subdir}/{file_name}")
-                print(f"Processing file {file_idx+1}/{len(csv_files)} from {subdir}: {file_name}")
                 
                 try:
                     # Read the CSV file
@@ -191,14 +212,14 @@ def process_files(data_dir):
                     
                     # Process each signal column
                     signal_count = 0
-                    for column in df.columns:
-                        # Skip any non-signal columns (like timestamps)
-                        if not column.startswith(file_name.split('.')[0]):
-                            continue
-                            
+                    signal_columns = [col for col in df.columns if col.startswith(file_name.split('.')[0])]
+                    
+                    # Create a progress bar for processing signals within the file
+                    signal_progress = tqdm(signal_columns, desc=f"Signals in {file_name}", 
+                                          unit="signal", leave=False)
+                    
+                    for column in signal_progress:
                         signal_count += 1
-                        if signal_count % 10 == 0:
-                            print(f"  Processing signal {signal_count}/{len(df.columns)}")
                         
                         logger.info(f"Processing signal: {column}")
                         
@@ -241,12 +262,21 @@ def process_files(data_dir):
                             logger.error(f"Error processing column {column} in file {file_name}: {str(e)}")
                             logger.error(traceback.format_exc())
                     
-                    print(f"  Processed {signal_count} signals in {subdir}/{file_name}")
+                    logger.info(f"Processed {signal_count} signals in {subdir}/{file_name}")
                         
                 except Exception as e:
                     logger.error(f"Error processing file {file_name}: {str(e)}")
                     logger.error(traceback.format_exc())
                     print(f"ERROR: Failed to process file {file_name}")
+                
+                # Update the overall progress bar
+                overall_progress.update(1)
+                
+            # Close subdir progress bar
+            subdir_progress.close()
+            
+        # Close overall progress bar
+        overall_progress.close()
     
     except Exception as e:
         logger.error(f"Unexpected error in process_files: {str(e)}")
@@ -285,6 +315,7 @@ def generate_feature_table(all_results, output_file, include_pe_verification=Fal
             
         # Convert results to DataFrame
         try:
+            print("Creating feature table from results...")
             result_df = pd.DataFrame(all_results)
             logger.info(f"Created DataFrame with {len(result_df)} rows")
             print(f"Created feature table with {len(result_df)} rows")
@@ -296,6 +327,7 @@ def generate_feature_table(all_results, output_file, include_pe_verification=Fal
         
         # Reorder and filter columns
         try:
+            print("Organizing columns...")
             if include_pe_verification:
                 ordered_columns = [
                     'file_name', 'signal', 'signal_type', 'signallength', 'pe', 'pe_fisher', 
@@ -330,6 +362,7 @@ def generate_feature_table(all_results, output_file, include_pe_verification=Fal
             
         # Save to CSV
         try:
+            print(f"Saving feature table to {output_file}...")
             result_df.to_csv(output_file, index=False)
             logger.info(f"Successfully saved feature table to {output_file}")
             print(f"Successfully saved feature table to {output_file}")
@@ -380,27 +413,34 @@ def main(include_pe_verification=False):
             print(f"ERROR: Could not create output directory {output_dir}")
             return
         
+        # Setup progress tracking for entire process
+        main_progress = tqdm(total=4, desc="Overall Process", unit="phase")
+        
         # Process training data
         print("\nProcessing training data...")
         logger.info("Processing training data...")
         train_results = process_files(train_dir)
+        main_progress.update(1)  # Update main progress bar after training data processing
         
         train_df = generate_feature_table(
             train_results, 
             os.path.join(output_dir, 'features_train.csv'),
             include_pe_verification
         )
+        main_progress.update(1)  # Update main progress bar after generating training features
         
         # Check if training data processing was successful
         if train_df is None:
             logger.error("Failed to process training data")
             print("ERROR: Failed to process training data")
+            main_progress.close()
             return
             
         # Process test data
         print("\nProcessing test data...")
         logger.info("Processing test data...")
         test_results = process_files(test_dir)
+        main_progress.update(1)  # Update main progress bar after test data processing
         
         test_df = generate_feature_table(
             test_results, 
@@ -412,6 +452,7 @@ def main(include_pe_verification=False):
         if test_df is None:
             logger.error("Failed to process test data")
             print("ERROR: Failed to process test data")
+            main_progress.close()
             return
         
         # Combine results
@@ -423,10 +464,12 @@ def main(include_pe_verification=False):
             logger.error(f"Error combining train and test results: {str(e)}")
             logger.error(traceback.format_exc())
             print("ERROR: Failed to combine train and test results")
+            main_progress.close()
             return
             
         # Save combined results
         try:
+            print("Saving combined feature table...")
             all_results.to_csv(os.path.join(output_dir, 'features_complete.csv'), index=False)
             logger.info(f"Saved combined results to features_complete.csv")
             print(f"Saved combined results to {os.path.join(output_dir, 'features_complete.csv')}")
@@ -434,7 +477,11 @@ def main(include_pe_verification=False):
             logger.error(f"Error saving combined results: {str(e)}")
             logger.error(traceback.format_exc())
             print("ERROR: Failed to save combined results")
+            main_progress.close()
             return
+        
+        main_progress.update(1)  # Final update to main progress bar
+        main_progress.close()
         
         print(f"\nProcessing complete. Total features: {len(all_results)}")
         logger.info(f"Processing complete. Total features: {len(all_results)}")

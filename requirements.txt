@@ -2,3 +2,4 @@
 numpy
 pandas
 ordpy>=1.1.0
+tqdm>=4.65.0  # For progress bars
