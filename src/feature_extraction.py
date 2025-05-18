@@ -310,7 +310,7 @@ def process_files(data_dir, dimensions=[2, 3], taus=[1, 2, 3]):
         print(f"Found {total_files} total CSV files to process")
 
         # Set up progress bar for overall file processing
-        overall_progress = tqdm(total=total_files, desc="Overall Progress", unit="file")
+        overall_progress = tqdm(total=total_files, desc="All Files Progress", unit="file", position=0, leave=True, dynamic_ncols=True)
 
         # Process each subdirectory
         total_csv_files = 0
@@ -331,7 +331,7 @@ def process_files(data_dir, dimensions=[2, 3], taus=[1, 2, 3]):
 
             # Create a progress bar for this subdirectory
             subdir_progress = tqdm(
-                csv_files, desc=f"Processing {subdir}", unit="file", leave=False
+                csv_files, desc=f"Processing {subdir}", unit="file", position=1, leave=False, dynamic_ncols=True
             )
 
             # Process each file in this subdirectory
@@ -357,7 +357,9 @@ def process_files(data_dir, dimensions=[2, 3], taus=[1, 2, 3]):
                         signal_columns,
                         desc=f"Signals in {file_name}",
                         unit="signal",
+                        position=2,
                         leave=False,
+                        dynamic_ncols=True
                     )
 
                     for column in signal_progress:
@@ -605,7 +607,7 @@ def main(include_pe_verification=False, dimensions=[2, 3], taus=[1, 2, 3]):
             return
 
         # Setup progress tracking for entire process
-        main_progress = tqdm(total=4, desc="Overall Process", unit="phase")
+        main_progress = tqdm(total=4, desc="Pipeline Stages", unit="stage", position=0, leave=True, dynamic_ncols=True)
 
         # Process training data
         print("\nProcessing training data...")
