@@ -9,7 +9,6 @@ from ordpy import complexity_entropy, fisher_shannon
 from datetime import datetime
 from tqdm import tqdm
 
-# TODO Go through most recent changes before commiting
 # TODO Understand the data visuals
 # TODO Finalize README
 # TODO Finalize GitHub repository
@@ -185,7 +184,7 @@ def process_single_dimension_tau(signal_data, dim, tau):
         return result
 
 
-def process_signal(signal_data, dimensions=[1, 2], taus=[1, 2, 3]):
+def process_signal(signal_data, dimensions=[2, 3], taus=[1, 2, 3]):
     """
     Process a single signal with multiple dimension and tau combinations,
     one at a time to manage memory, with lower dimensions processed first.
@@ -195,7 +194,7 @@ def process_signal(signal_data, dimensions=[1, 2], taus=[1, 2, 3]):
     signal_data : array_like
         The signal data to process.
     dimensions : list, optional
-        List of embedding dimensions to use for calculations, by default [1, 2].
+        List of embedding dimensions to use for calculations, by default [2, 3].
     taus : list, optional
         List of time delays to use for calculations, by default [1, 2, 3].
 
@@ -258,7 +257,7 @@ def count_total_files(data_dir):
     return total_files
 
 
-def process_files(data_dir, dimensions=[1, 2], taus=[1, 2, 3]):
+def process_files(data_dir, dimensions=[2, 3], taus=[1, 2, 3]):
     """
     Process all CSV files in the given directory and its subdirectories.
     The directory structure is expected to be:
@@ -277,7 +276,7 @@ def process_files(data_dir, dimensions=[1, 2], taus=[1, 2, 3]):
     data_dir : str
         Path to the directory containing subdirectories with CSV files to process.
     dimensions : list, optional
-        List of embedding dimensions to use for calculations, by default [1, 2].
+        List of embedding dimensions to use for calculations, by default [2, 3].
     taus : list, optional
         List of time delays to use for calculations, by default [1, 2, 3].
 
@@ -573,7 +572,7 @@ def generate_feature_table(all_results, output_file, include_pe_verification=Fal
         return None
 
 
-def main(include_pe_verification=False, dimensions=[1, 2], taus=[1, 2, 3]):
+def main(include_pe_verification=False, dimensions=[2, 3], taus=[1, 2, 3]):
     """
     Main function to process data and generate feature tables.
 
@@ -583,7 +582,7 @@ def main(include_pe_verification=False, dimensions=[1, 2], taus=[1, 2, 3]):
         Whether to include PE values from fisher_shannon for verification
         in the output tables, by default False.
     dimensions : list, optional
-        List of embedding dimensions to use for calculations, by default [1, 2].
+        List of embedding dimensions to use for calculations, by default [2, 3].
     taus : list, optional
         List of time delays to use for calculations, by default [1, 2, 3].
     """

@@ -26,7 +26,7 @@ Additional options:
 # To include Fisher PE verification columns in output
 python main.py --verify
 
-# To use custom embedding dimensions (default is 1,2)
+# To use custom embedding dimensions (default is 2,3)
 python main.py --dimensions 3,4,5
 
 # To use custom time delays (default is 1,2,3)
@@ -118,7 +118,7 @@ The toolkit implements a multi-step feature extraction process:
    - **Permutation Entropy (PE)**: Quantifies the complexity/unpredictability of time series data
    - **Complexity Measure**: Derived from permutation entropy to assess system complexity
    - **Fisher Information**: Measures the amount of information a signal carries about pain states
-3. **Parameter Exploration**: Analyzes each signal with multiple embedding dimensions (1-2 by default) and time delays (1-3 by default)
+3. **Parameter Exploration**: Analyzes each signal with multiple embedding dimensions (2-3 by default) and time delays (1-3 by default)
 4. **State Identification**: Extracts pain state information (baseline/no pain, low, high) from signal metadata
 
 All processing details are recorded in log files for traceability and debugging.

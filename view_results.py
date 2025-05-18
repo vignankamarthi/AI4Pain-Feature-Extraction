@@ -108,7 +108,7 @@ def plot_complexity_entropy(df):
     df : pandas.DataFrame
         DataFrame containing the feature data.
     """
-    plt.figure(figsize=(12, 10))
+    plt.figure(figsize=(24, 20))
     
     # Create color map for states
     states = df['state'].unique()
@@ -125,7 +125,7 @@ def plot_complexity_entropy(df):
     
     # Create marker map for signal types
     signal_types = df['signal_type'].unique()
-    markers = ['o', 's', '^', 'D', 'x', '*', 'p', 'h']
+    markers = ['.', '+', '*', 'x', 'o', 's', '^', 'd']  # Use dot and plus as first choices - they render smaller
     signal_markers = {signal_type: markers[i % len(markers)] for i, signal_type in enumerate(signal_types)}
     
     # Create subplots for each dimension-tau combination
@@ -136,6 +136,9 @@ def plot_complexity_entropy(df):
     num_subplots = len(dims) * len(taus)
     rows = int(np.ceil(np.sqrt(num_subplots)))
     cols = int(np.ceil(num_subplots / rows))
+    
+    # Adjust subplot parameters for better spacing
+    plt.subplots_adjust(wspace=0.4, hspace=0.4)
     
     # Set up legend handles and labels
     legend_handles = []
@@ -163,6 +166,7 @@ def plot_complexity_entropy(df):
                                        c=state_colors.get(state, 'gray'),
                                        marker=signal_markers.get(signal_type, 'x'),
                                        alpha=0.7,
+                                       s=12,  # Slightly larger marker size
                                        label=f"{signal_type} - {state}")
                             
                             # Add to legend only once
@@ -176,21 +180,26 @@ def plot_complexity_entropy(df):
                 y_max = y_max / np.max(y_max) * 0.5  # Scale to match typical complexity range
                 ax.plot(x, y_max, 'k--', alpha=0.3)
                 
-                ax.set_xlabel('Permutation Entropy (PE)')
-                ax.set_ylabel('Complexity (COMP)')
-                ax.set_title(f'Dimension = {dim}, Tau = {tau}')
+                ax.set_xlabel('Permutation Entropy (PE)', fontsize=12)
+                ax.set_ylabel('Complexity (COMP)', fontsize=12)
+                ax.set_title(f'Dimension = {dim}, Tau = {tau}', fontsize=14)
                 ax.grid(True, alpha=0.3)
                 ax.set_xlim(0, 1.05)
                 ax.set_ylim(0, 0.6)
+                ax.tick_params(axis='both', which='major', labelsize=10)
+                for spine in ax.spines.values():
+                    spine.set_linewidth(1.5)
     
     # Add a single legend for the entire figure
     fig = plt.gcf()
+    # Create a more attractive legend with larger symbol size
     fig.legend(legend_handles, legend_labels, loc='upper center', bbox_to_anchor=(0.5, 0.05),
-               ncol=min(3, len(legend_labels)), frameon=True, fancybox=True, shadow=True)
+               ncol=min(5, len(legend_labels)), frameon=True, fancybox=True, shadow=True, fontsize=12,
+               borderpad=1.0, labelspacing=0.7, handletextpad=0.5, markerscale=2.0)
     
-    plt.suptitle('Complexity-Entropy Causality Plane', fontsize=16)
-    plt.tight_layout(rect=[0, 0.1, 1, 0.96])  # Adjust to make room for the legend
-    plt.savefig('results/complexity_entropy_plane.png', dpi=300, bbox_inches='tight')
+    plt.suptitle('Complexity-Entropy Causality Plane', fontsize=22, y=0.98)
+    plt.tight_layout(rect=[0, 0.07, 1, 0.96])  # Make a bit more room for the legend
+    plt.savefig('results/complexity_entropy_plane.png', dpi=600, bbox_inches='tight')
     plt.close()
 
 def analyze_state_transitions(df):

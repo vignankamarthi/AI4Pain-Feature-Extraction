@@ -20,8 +20,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description='AI4PAIN Feature Extraction')
     parser.add_argument('--verify', action='store_true', 
                         help='Include Fisher PE verification column in output')
-    parser.add_argument('--dimensions', type=str, default='1,2',
-                        help='Comma-separated list of embedding dimensions (default: 1,2)')
+    parser.add_argument('--dimensions', type=str, default='2,3',
+                        help='Comma-separated list of embedding dimensions (default: 2,3)')
     parser.add_argument('--taus', type=str, default='1,2,3',
                         help='Comma-separated list of time delays (default: 1,2,3)')
     return parser.parse_args()
