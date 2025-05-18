@@ -9,11 +9,6 @@ from ordpy import complexity_entropy, fisher_shannon
 from datetime import datetime
 from tqdm import tqdm
 
-# TODO Understand the data visuals
-# TODO Finalize README
-# TODO Finalize GitHub repository
-# TODO Send full report to Sri
-
 
 # Set up logging
 def setup_logging():

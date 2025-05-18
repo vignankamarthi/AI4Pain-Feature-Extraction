@@ -54,21 +54,38 @@ python view_dataframe.py
 python view_dataframe.py --file path/to/features.csv
 ```
 
-The visualization script generates several outputs:
+## Terminal Output Information
 
-1. **DataFrame Preview**: Displays the extracted features in a tabular format, showing the actual feature values.
+When running `view_results.py`, comprehensive statistics are displayed in the terminal, including:
 
-2. **Complexity-Entropy Causality Plane** (`results/complexity_entropy_plane.png`):
+- **Data Summary**: Total number of samples analyzed
+- **Signal Distribution**: Breakdown of samples by signal type (Bvp, Eda, Resp, SpO2)
+- **Pain State Distribution**: Breakdown of samples by pain state (no pain, low, high, unknown)
+- **Feature Statistics**: Summary statistics (mean, standard deviation, min, max) for each feature type:
+  - Permutation Entropy (PE)
+  - Complexity (COMP)
+  - Fisher Information (FISHER)
+- **State Transition Analysis**: Mean changes in each metric between different pain states
+- **Parameter Effectiveness Rankings**: Top-performing parameter combinations (signal type, dimension, tau)
+- **Best Parameters by Signal Type**: Optimal dimension and tau values for each signal type
+
+This terminal output helps you understand the distribution of your data and identify which parameter combinations and signal types are most effective for distinguishing between pain states.
+
+## Visualization Outputs
+
+The visualization script (`view_results.py`) generates several outputs:
+
+1. **Complexity-Entropy Causality Plane** (`results/complexity_entropy_plane.png`):
    - Plots permutation entropy vs. complexity for different signal types and pain states
    - Each subplot represents a different dimension-tau combination
    - Shows how signals distribute across the complexity-entropy space
 
-3. **State Transitions Analysis** (`results/state_transitions.png`):
+2. **State Transitions Analysis** (`results/state_transitions.png`):
    - Shows changes in PE, complexity, and Fisher information between pain states
    - Helps identify which metrics change most significantly with pain intensity
    - Bars indicate magnitude and direction of changes between states
 
-4. **Parameter Effectiveness** (`results/parameter_effectiveness.png`):
+3. **Parameter Effectiveness** (`results/parameter_effectiveness.png`):
    - Heatmap showing which parameter combinations best distinguish between pain states
    - Bar chart showing which signal types are most sensitive to pain state changes
    - Helps identify optimal parameters for feature extraction
@@ -111,14 +128,14 @@ The project processes physiological signals organized by type:
 
 ## Feature Extraction Process
 
-The toolkit implements a multi-step feature extraction process:
+The module implements a multi-step feature extraction process:
 
 1. **Signal Processing**: Reads physiological signals from CSV files organized by signal type
 2. **Feature Calculation**:
-   - **Permutation Entropy (PE)**: Quantifies the complexity/unpredictability of time series data
-   - **Complexity Measure**: Derived from permutation entropy to assess system complexity
+   - **Permutation Entropy (PE)**: Quantifies the potential patterns/unpredictability of time series data
+   - **Complexity Measure**: Derived from permutation entropy to assess pattern complexity
    - **Fisher Information**: Measures the amount of information a signal carries about pain states
-3. **Parameter Exploration**: Analyzes each signal with multiple embedding dimensions (2-3 by default) and time delays (1-3 by default)
+3. **Parameter Exploration**: Analyzes each signal with multiple embedding dimensions (2,3 by default) and time delays (1,2,3 by default)
 4. **State Identification**: Extracts pain state information (baseline/no pain, low, high) from signal metadata
 
 All processing details are recorded in log files for traceability and debugging.
