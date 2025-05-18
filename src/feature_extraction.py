@@ -9,9 +9,7 @@ from ordpy import complexity_entropy, fisher_shannon
 from datetime import datetime
 from tqdm import tqdm
 
-# TODO Understand the data points we are using
-# TODO Add valuable statiscal parameters and information to the view_results.py file
-# TODO Create a "view_results.py file to visualize the results as a Pandas DataFrame"
+# TODO Understand the data visuals
 # TODO Finalize README
 # TODO Finalize GitHub repository
 # TODO Send full report to Sri
