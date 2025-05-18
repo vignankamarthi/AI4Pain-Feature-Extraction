@@ -46,6 +46,12 @@ python view_results.py
 
 # Specify a custom feature file path
 python view_results.py --file path/to/features.csv
+
+# To view the dataframe in a clean tabular format (similar to Jupyter notebook's style)
+python view_dataframe.py
+
+# View a specific features file as a dataframe
+python view_dataframe.py --file path/to/features.csv
 ```
 
 The visualization script generates several outputs:
@@ -90,7 +96,8 @@ AI4Pain/
 ├── README.md          # This file
 ├── .gitignore         # Git ignore file
 ├── main.py            # Simple entry point script for running extraction
-└── view_results.py    # Script for visualizing and analyzing feature data
+├── view_results.py    # Script for visualizing and analyzing feature data
+└── view_dataframe.py  # Script for displaying feature data in a clean tabular format
 ```
 
 ## Data Organization

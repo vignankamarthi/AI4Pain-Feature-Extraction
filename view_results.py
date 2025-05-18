@@ -50,10 +50,11 @@ def load_feature_data(file_path="results/features_complete.csv"):
     except Exception as e:
         print(f"Error loading data: {str(e)}")
         return None
-
 def display_dataframe(df, num_rows=10):
     """
     Display a simple preview of the DataFrame in the terminal.
+    This function is left for compatibility but doesn't output to terminal.
+    For proper DataFrame viewing, use view_dataframe.py instead.
     
     Parameters
     ----------
@@ -62,33 +63,8 @@ def display_dataframe(df, num_rows=10):
     num_rows : int, optional
         Number of rows to display from start and end.
     """
-    print("\n=== Feature Data Preview ===\n")
-    
-    # Display head and tail in a simple format, similar to the image
-    print(f"First {num_rows} rows:")
-    print(df.head(num_rows).to_string())
-    
-    print(f"\nLast {num_rows} rows:")
-    print(df.tail(num_rows).to_string())
-    
-    # Display basic info
-    print("\nDataFrame Info:")
-    print(f"Shape: {df.shape}")
-    print(f"Missing values: {df.isna().sum().sum()}")
-    
-    # Count unique values in categorical columns
-    print(f"\nSignal Types: {df['signal_type'].unique().tolist()}")
-    print(f"Pain States: {df['state'].unique().tolist()}")
-    print(f"Dimensions: {sorted(df['dimension'].unique().tolist())}")
-    print(f"Taus: {sorted(df['tau'].unique().tolist())}")
-    
-    # Check for Fisher PE column if present
-    if 'pe_fisher' in df.columns:
-        print("\nFisher PE verification included in the data.")
-    
-    # Print note about state standardization
-    print("\nNote: 'baseline' and 'rest' states have been standardized to 'no pain'.")
-    print("Original states are preserved in the 'original_state' column.")
+    # This function is intentionally empty
+    pass
 
 def show_data_summary(df):
     """
