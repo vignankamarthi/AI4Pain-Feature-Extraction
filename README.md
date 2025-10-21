@@ -60,28 +60,9 @@ data/
 
 The following folders are created automatically during execution and are gitignored:
 
-**`logs/`** - Contains execution logs
-- Auto-cleaned when files exceed 7 days old OR folder exceeds 50MB
-- Preserves `.gitkeep` file for repository structure
+**`logs/`** - Contains execution logs (gitignored)
 
-**`results/`** - Contains output CSV files and visualizations
-- Auto-cleaned when files exceed 30 days old OR folder exceeds 500MB
-- Preserves `.gitkeep` file for repository structure
-
-**Manual cleanup**:
-```bash
-# Preview what would be deleted (dry run)
-python cleanup_artifacts.py --dry-run
-
-# Clean with default thresholds
-python cleanup_artifacts.py
-
-# Custom thresholds
-python cleanup_artifacts.py --logs-max-age 3 --results-max-size 200
-
-# Force cleanup without confirmation
-python cleanup_artifacts.py --force
-```
+**`results/`** - Contains output CSV files and visualizations (gitignored)
 
 ### Basic Usage
 
@@ -139,7 +120,6 @@ src/
 **Entry points:**
 - `main.py`: CLI interface with multi-select support
 - `visualize_notebook_style.py`: 5×3 Renyi complexity-entropy visualization
-- `cleanup_artifacts.py`: Auto-cleanup script for logs and results
 
 ---
 
@@ -260,12 +240,11 @@ AI4Pain-Feature-Extraction-V2/
 │   ├── test/.gitkeep             # Placeholder for test data
 │   ├── train/.gitkeep            # Placeholder for train data
 │   └── validation/.gitkeep       # Placeholder for validation data
-├── logs/                         # Auto-generated logs (auto-cleaned)
-├── results/                      # Output CSVs and plots (auto-cleaned)
+├── logs/                         # Auto-generated logs (gitignored)
+├── results/                      # Output CSVs and plots (gitignored)
 ├── src/                          # Source code (see Architecture above)
 ├── main.py                       # CLI entry point with multi-select
 ├── visualize_notebook_style.py  # 5×3 Renyi complexity-entropy plots
-├── cleanup_artifacts.py          # Auto-cleanup script for logs/results
 ├── requirements.txt              # Python dependencies
 ├── .gitignore                    # Excludes data/, logs/, results/
 └── README.md                     # This file
