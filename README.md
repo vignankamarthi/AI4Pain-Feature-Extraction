@@ -1,171 +1,350 @@
-# AI4PAIN 2025 Feature Extraction
+# AI4Pain Feature Extraction V2
 
-A feature extraction tool for the AI4PAIN 2025 Challenge that analyzes physiological signals (EDA, BVP, RESP, SpO₂) for pain assessment. The tool calculates permutation entropy, complexity, and Fisher complexity features for signals under different pain states.
+**Entropy-Based Feature Extraction for Physiological Pain Assessment**
 
-## Setup and Usage
+Production-ready Python implementation extracting entropy-based features from physiological signals (BVP, EDA, Resp, SpO2) for multi-class pain state classification. Long-format output aligned with Jupyter notebook analysis pipeline.
 
-This project uses standard Python package management with a simple manual setup:
+---
+
+## Overview
+
+This system implements five entropy-based complexity measures across multiple temporal scales to characterize physiological responses to pain:
+
+- **8 entropy measures**: Permutation Entropy, Statistical Complexity, Fisher-Shannon, Fisher Information, Renyi Entropy/Complexity, Tsallis Entropy/Complexity
+- **Long-format output**: 15 rows per signal (5 dimensions × 3 time delays), 16 columns per row
+- **Multi-signal processing**: BVP, EDA, Respiration, SpO2
+- **4-class pain states**: Baseline, Low, High, Rest (+ unknown handling)
+- **Robust preprocessing**: Z-score normalization, NaN tracking, granular file organization
+- **Notebook-aligned**: Exact structure matching reference Jupyter analysis
+
+---
+
+## Quick Start
+
+### Installation
 
 ```bash
-# Create a virtual environment
-python -m venv venv
+# Clone repository
+git clone <repo-url>
+cd AI4Pain-Feature-Extraction-V2
 
-# Activate the environment
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Create virtual environment (Python 3.8+)
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
+```
 
-# Run the feature extraction
+### Data Organization
+
+Structure your data as follows:
+```
+data/
+├── train/
+│   ├── Bvp/*.csv
+│   ├── Eda/*.csv
+│   ├── Resp/*.csv
+│   └── SpO2/*.csv
+├── validation/
+│   └── [same structure]
+└── test/
+    └── [same structure]
+```
+
+**CSV format**: Each column = one participant trial, rows = time samples
+
+**Note**: The `data/test/`, `data/train/`, and `data/validation/` directories are preserved as placeholders in the repository via `.gitkeep` files. All data files within these directories are gitignored for privacy.
+
+### Auto-Generated Folders
+
+The following folders are created automatically during execution and are gitignored:
+
+**`logs/`** - Contains execution logs
+- Auto-cleaned when files exceed 7 days old OR folder exceeds 50MB
+- Preserves `.gitkeep` file for repository structure
+
+**`results/`** - Contains output CSV files and visualizations
+- Auto-cleaned when files exceed 30 days old OR folder exceeds 500MB
+- Preserves `.gitkeep` file for repository structure
+
+**Manual cleanup**:
+```bash
+# Preview what would be deleted (dry run)
+python cleanup_artifacts.py --dry-run
+
+# Clean with default thresholds
+python cleanup_artifacts.py
+
+# Custom thresholds
+python cleanup_artifacts.py --logs-max-age 3 --results-max-size 200
+
+# Force cleanup without confirmation
+python cleanup_artifacts.py --force
+```
+
+### Basic Usage
+
+```bash
+# Process all datasets, all signal types (default)
 python main.py
+
+# Process specific dataset(s) - space-separated
+python main.py --dataset train
+python main.py --dataset train validation
+
+# Process specific signal type(s) - space-separated
+python main.py --signal-type Bvp Eda
+python main.py --dataset train --signal-type Bvp
+
+# Custom dimensions and time delays
+python main.py --dimensions 4,5,6 --taus 1,2
+
+# Disable z-score normalization
+python main.py --no-zscore
+
+# Disable progress bars
+python main.py --no-progress
 ```
 
-Additional options:
+### Viewing Results
 
 ```bash
-# To include Fisher PE verification columns in output
-python main.py --verify
+# Generate notebook-style visualization (5×3 Renyi complexity-entropy grid)
+python visualize_notebook_style.py --dataset train
 
-# To use custom embedding dimensions (default is 2,3)
-python main.py --dimensions 3,4,5
-
-# To use custom time delays (default is 1,2,3)
-python main.py --taus 1,3,5
-
-# Combining options
-python main.py --verify --dimensions 3,4 --taus 2,4
+# Specify signal types for visualization
+python visualize_notebook_style.py --dataset validation --signal-type Bvp Eda
 ```
 
-## Visualizing Results
+---
 
-After generating features, you can visualize and analyze the results using:
+## Architecture
 
-```bash
-# Run the visualization with default settings
-python view_results.py
-
-# Specify a custom feature file path
-python view_results.py --file path/to/features.csv
-
-# To view the dataframe in a clean tabular format (similar to Jupyter notebook's style)
-python view_dataframe.py
-
-# View a specific features file as a dataframe
-python view_dataframe.py --file path/to/features.csv
+```
+src/
+├── config/
+│   └── settings.py              # Configuration management
+├── core/
+│   ├── entropy_calculator.py    # 8 entropy implementations (ordpy-based)
+│   └── feature_extractor.py     # Long-format orchestration
+├── preprocessing/
+│   ├── label_extractor.py       # State and binaryclass extraction
+│   └── signal_processor.py      # Z-score normalization
+└── utils/
+    ├── data_loader.py            # CSV I/O
+    └── logger.py                 # Structured logging
 ```
 
-## Terminal Output Information
+**Entry points:**
+- `main.py`: CLI interface with multi-select support
+- `visualize_notebook_style.py`: 5×3 Renyi complexity-entropy visualization
+- `cleanup_artifacts.py`: Auto-cleanup script for logs and results
 
-When running `view_results.py`, comprehensive statistics are displayed in the terminal, including:
+---
 
-- **Data Summary**: Total number of samples analyzed
-- **Signal Distribution**: Breakdown of samples by signal type (Bvp, Eda, Resp, SpO2)
-- **Pain State Distribution**: Breakdown of samples by pain state (no pain, low, high, unknown)
-- **Feature Statistics**: Summary statistics (mean, standard deviation, min, max) for each feature type:
-  - Permutation Entropy (PE)
-  - Complexity (COMP)
-  - Fisher Information (FISHER)
-- **State Transition Analysis**: Mean changes in each metric between different pain states
-- **Parameter Effectiveness Rankings**: Top-performing parameter combinations (signal type, dimension, tau)
-- **Best Parameters by Signal Type**: Optimal dimension and tau values for each signal type
+## Entropy Measures
 
-This terminal output helps you understand the distribution of your data and identify which parameter combinations and signal types are most effective for distinguishing between pain states.
+### 1. Permutation Entropy (PE)
+Quantifies complexity of ordinal patterns in time series. Lower values indicate more predictable signals.
 
-## Visualization Outputs
+**Formula**: Shannon entropy of ordinal pattern distribution, normalized by log(d!)
 
-The visualization script (`view_results.py`) generates several outputs:
+### 2. Statistical Complexity (C)
+Measures departure from equilibrium distribution. Captures structural complexity beyond simple randomness.
 
-1. **Complexity-Entropy Causality Plane** (`results/complexity_entropy_plane.png`):
-   - Plots permutation entropy vs. complexity for different signal types and pain states
-   - Each subplot represents a different dimension-tau combination
-   - Shows how signals distribute across the complexity-entropy space
+**Formula**: C = PE × JS-divergence (pattern dist || uniform dist)
 
-2. **State Transitions Analysis** (`results/state_transitions.png`):
-   - Shows changes in PE, complexity, and Fisher information between pain states
-   - Helps identify which metrics change most significantly with pain intensity
-   - Bars indicate magnitude and direction of changes between states
+### 3. Fisher Information (fisher_info, fisher_shannon)
+Measures local sensitivity to parameter changes.
+- **fisher_shannon**: Shannon-weighted Fisher information (ordpy index [0])
+- **fisher_info**: Gradient-based sensitivity (ordpy index [1])
 
-3. **Parameter Effectiveness** (`results/parameter_effectiveness.png`):
-   - Heatmap showing which parameter combinations best distinguish between pain states
-   - Bar chart showing which signal types are most sensitive to pain state changes
-   - Helps identify optimal parameters for feature extraction
+### 4. Renyi Entropy (Renyi_PE, Renyi_C)
+Generalized entropy with parameter q=1 (Shannon limit).
+
+**Formula**: H_q = (1/(1-q)) × log(Σ p_i^q)
+
+### 5. Tsallis Entropy (Tsallis_PE, Tsallis_C)
+Non-extensive entropy for long-range correlations (q=1, Shannon limit).
+
+**Formula**: S_q = (1/(q-1)) × (1 - Σ p_i^q)
+
+---
+
+## Output
+
+**Format**: Long-format CSV (15 rows per signal, 16 columns per row)
+
+**File Pattern**: `results/results_{dataset}_{signal_type}.csv`
+- Example: `results_train_bvp.csv`, `results_validation_eda.csv`
+
+**Columns (16 total)**:
+1. `file_name`: Full path (`data/train/Bvp/1.csv`)
+2. `signal`: Column name from source CSV (`1_Baseline_1`)
+3. `signallength`: Valid samples after NaN removal
+4. `pe`: Permutation Entropy
+5. `comp`: Statistical Complexity
+6. `fisher_shannon`: Fisher-Shannon entropy
+7. `fisher_info`: Fisher Information
+8. `renyipe`: Renyi Permutation Entropy
+9. `renyicomp`: Renyi Complexity
+10. `tsallispe`: Tsallis Permutation Entropy
+11. `tsalliscomp`: Tsallis Complexity
+12. `dimension`: Embedding dimension (3-7)
+13. `tau`: Time delay (1-3)
+14. `state`: Pain state (baseline/low/high/rest/unknown)
+15. `binaryclass`: Numeric encoding (0/1/2/3/-1)
+16. `nan_percentage`: NaN percentage in original signal
+
+**Example rows**:
+```csv
+file_name,signal,signallength,pe,comp,fisher_shannon,fisher_info,renyipe,renyicomp,tsallispe,tsalliscomp,dimension,tau,state,binaryclass,nan_percentage
+data/train/Bvp/6.csv,6_Baseline_1,5950,0.999332,0.000651,0.999332,0.000437,0.999332,0.000651,0.999332,0.000651,3,1,baseline,0,0.00
+data/train/Bvp/6.csv,6_Baseline_1,5950,0.997424,0.002532,0.997424,0.001581,0.997424,0.002532,0.997424,0.002532,3,2,baseline,0,0.00
+data/train/Bvp/6.csv,6_Baseline_1,5950,0.992063,0.007686,0.992063,0.004582,0.992063,0.007686,0.992063,0.007686,3,3,baseline,0,0.00
+...
+```
+
+**Structure**: Each signal generates 15 rows (5 dimensions × 3 taus)
+
+---
+
+## Performance
+
+**Hardware**: MacBook Pro M1, 8 cores, 16 GB RAM
+
+**Metrics**:
+- **Processing speed**: ~1.82 samples/second
+- **Total runtime**: ~4332 seconds for 7,872 samples
+- **Memory usage**: ~2-3 GB peak
+
+**For 145× speedup with identical results, see [Rust implementation](../ai4pain-rust/)**
+
+---
+
+## Dependencies
+
+**Core libraries**:
+- `ordpy==1.1.0`: Ordinal pattern analysis (reference implementation)
+- `numpy>=1.24.0`: Numerical operations
+- `pandas>=2.0.0`: DataFrame I/O
+- `scipy>=1.10.0`: Signal filtering (optional)
+
+**CLI and logging**:
+- `tqdm>=4.65.0`: Progress bars
+
+**Full list**: See `requirements.txt`
+
+---
+
+## Configuration
+
+**Command-line arguments** (see `python main.py --help`):
+- `--dataset`: Space-separated datasets (train validation test), default: all three
+- `--signal-type`: Space-separated signal types (Bvp Eda Resp SpO2), default: all four
+- `--dimensions`: Comma-separated embedding dimensions (default: 3,4,5,6,7)
+- `--taus`: Comma-separated time delays (default: 1,2,3)
+- `--no-zscore`: Disable z-score normalization (default: on)
+- `--no-progress`: Disable progress bars (default: on)
+
+**Programmatic configuration**: Use `src/config/settings.py` Settings class
+
+---
 
 ## Project Structure
 
 ```
-AI4Pain/
-├── data/              # Data directory
-│   ├── train/         # Training data files
-│   │   ├── Bvp/       # Blood Volume Pulse signals
-│   │   ├── Eda/       # Electrodermal Activity signals
-│   │   ├── Resp/      # Respiration signals
-│   │   └── SpO2/      # Blood Oxygen Saturation signals
-│   └── test/          # Test data files
-│       ├── Bvp/       # Blood Volume Pulse signals
-│       ├── Eda/       # Electrodermal Activity signals
-│       ├── Resp/      # Respiration signals
-│       └── SpO2/      # Blood Oxygen Saturation signals
-├── logs/              # Log files directory
-├── results/           # Output directory for feature tables and visualizations
-├── src/               # Source code
-│   └── feature_extraction.py  # Main feature extraction code
-├── requirements.txt   # Python dependencies
-├── README.md          # This file
-├── .gitignore         # Git ignore file
-├── main.py            # Simple entry point script for running extraction
-├── view_results.py    # Script for visualizing and analyzing feature data
-└── view_dataframe.py  # Script for displaying feature data in a clean tabular format
+AI4Pain-Feature-Extraction-V2/
+├── data/                         # Input directory (gitignored - private)
+│   ├── test/.gitkeep             # Placeholder for test data
+│   ├── train/.gitkeep            # Placeholder for train data
+│   └── validation/.gitkeep       # Placeholder for validation data
+├── logs/                         # Auto-generated logs (auto-cleaned)
+├── results/                      # Output CSVs and plots (auto-cleaned)
+├── src/                          # Source code (see Architecture above)
+├── main.py                       # CLI entry point with multi-select
+├── visualize_notebook_style.py  # 5×3 Renyi complexity-entropy plots
+├── cleanup_artifacts.py          # Auto-cleanup script for logs/results
+├── requirements.txt              # Python dependencies
+├── .gitignore                    # Excludes data/, logs/, results/
+└── README.md                     # This file
 ```
 
-## Data Organization
+---
 
-The project processes physiological signals organized by type:
+## Validation
 
-- **Blood Volume Pulse (BVP)**: Measures changes in blood volume in peripheral tissues
-- **Electrodermal Activity (EDA)**: Records skin conductance which varies with sweat gland activity
-- **Respiration (RESP)**: Monitors breathing patterns and rate
-- **Blood Oxygen Saturation (SpO₂)**: Measures oxygen levels in the blood
+This implementation maintains **100% consistency** with the reference Jupyter notebook:
+- Exact 16-column long-format structure
+- Both Fisher-Shannon AND Fisher Information extraction (ordpy indices [0] and [1])
+- 4-class pain state labeling (baseline=0, low=1, high=2, rest=3)
+- Granular file organization pattern matching analysis workflow
 
-## Feature Extraction Process
+---
 
-The module implements a multi-step feature extraction process:
+## Troubleshooting
 
-1. **Signal Processing**: Reads physiological signals from CSV files organized by signal type
-2. **Feature Calculation**:
-   - **Permutation Entropy (PE)**: Quantifies the potential patterns/unpredictability of time series data
-   - **Complexity Measure**: Derived from permutation entropy to assess pattern complexity
-   - **Fisher Information**: Measures the amount of information a signal carries about pain states
-3. **Parameter Exploration**: Analyzes each signal with multiple embedding dimensions (2,3 by default) and time delays (1,2,3 by default)
-4. **State Identification**: Extracts pain state information (baseline/no pain, low, high) from signal metadata
+**Issue**: `ModuleNotFoundError: No module named 'ordpy'`
+- **Solution**: `pip install -r requirements.txt`
 
-All processing details are recorded in log files for traceability and debugging.
+**Issue**: `ValueError: Signal too short after NaN removal`
+- **Solution**: Signals with >85% NaN are skipped automatically. Check data quality.
 
-## Generated Features
+**Issue**: Slow processing (>1 hour for training set)
+- **Expected**: Python processes ~1.82 samples/sec. For 145× speedup, use [Rust implementation](../ai4pain-rust/).
 
-The extraction generates comprehensive feature tables with the following information:
+**Issue**: `FileNotFoundError: data/ directory not found`
+- **Solution**: Create data directory with required structure (see Quick Start above)
 
-| Column | Description |
-|--------|-------------|
-| `file_name` | Source CSV file name |
-| `signal` | Signal column identifier |
-| `signal_type` | Type of signal (Bvp, Eda, Resp, SpO2) |
-| `signallength` | Number of data points in the signal |
-| `pe` | Permutation entropy value |
-| `comp` | Complexity value |
-| `fisher` | Fisher complexity value |
-| `dimension` | Embedding dimension used |
-| `tau` | Time delay used |
-| `state` | Pain state (baseline/no pain, low, high) |
+---
 
-Optionally, Fisher PE columns can be included to validate Fisher PE ≈ Complexity PE.
+## Changes from Previous Versions
 
-## Technical Implementation
+**V2 Long-Format Update** (Current):
+- 16-column long-format output (15 rows per signal)
+- Multi-select CLI (space-separated datasets and signal types)
+- Granular file organization (`results_{dataset}_{signal_type}.csv`)
+- Notebook-aligned visualization (5×3 Renyi complexity-entropy grid)
+- 4-class pain states with explicit state labels + binary encoding
 
-The tool is implemented in Python using:
+**Previous Wide-Format**:
+- 120+-column wide format (1 row per signal)
+- Single-select CLI
+- Concatenated output files
 
-- **NumPy**: For efficient numerical operations on signal data
-- **Pandas**: For data manipulation and CSV handling
-- **OrdPy**: For permutation entropy and complexity calculations
-- **Matplotlib/Seaborn**: For visualization and analysis
+---
 
-The processing pipeline is designed to handle large datasets efficiently with comprehensive error handling and logging to ensure data quality.
+## References
+
+1. **Permutation Entropy**: Bandt, C., & Pompe, B. (2002). *Physical Review Letters*, 88(17), 174102.
+2. **Statistical Complexity**: Rosso, O. A., et al. (2007). *Physical Review Letters*, 99(15), 154102.
+3. **Fisher Information**: Martin, M. T., Plastino, A., & Rosso, O. A. (2003). *Physics Letters A*, 311(2-3), 126-132.
+4. **Ordpy Library**: Pessa, A. A. B., & Ribeiro, H. V. (2021). *Chaos*, 31(6), 063110.
+
+---
+
+## Citation
+
+```bibtex
+@software{ai4pain_v2,
+  author = {Kamarthi, Vignan},
+  title = {AI4Pain Feature Extraction V2: Entropy-Based Physiological Signal Analysis},
+  year = {2025},
+  institution = {Northeastern University}
+}
+```
+
+---
+
+## Related Implementations
+
+**Rust version** (145× faster, identical results): [../ai4pain-rust/](../ai4pain-rust/)
+- See [RUST_IMPLEMENTATION_GUIDE.md](../ai4pain-rust/RUST_IMPLEMENTATION_GUIDE.md) for Python → Rust translation guide
+
+---
+
+**Version**: 2.0.0
+**Author**: Vignan Kamarthi
+**Organization**: Northeastern University
+**Status**: Production Ready

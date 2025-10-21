@@ -1,26 +1,25 @@
-# Data directories
-/data/train/*
-/data/test/*
+# Data directories (PRIVATE/SENSITIVE - never commit)
+# Keep folder structure, ignore all contents
+data/*
+!data/test/
+!data/train/
+!data/validation/
+data/test/*
+data/train/*
+data/validation/*
+!data/test/.gitkeep
+!data/train/.gitkeep
+!data/validation/.gitkeep
 
-# Preserve data directory structure
-!/data/train/.gitkeep
-!/data/test/.gitkeep
-!/data/train/Bvp/.gitkeep
-!/data/train/Eda/.gitkeep
-!/data/train/Resp/.gitkeep
-!/data/train/SpO2/.gitkeep
-!/data/test/Bvp/.gitkeep
-!/data/test/Eda/.gitkeep
-!/data/test/Resp/.gitkeep
-!/data/test/SpO2/.gitkeep
+# Results directories (PRIVATE/SENSITIVE - never commit)
+results/
 
-# Results
-/results/*
-!/results/.gitkeep
+# Logs (auto-generated, cleaned periodically)
+logs/
 
-# Logs
-/logs/*
-!/logs/.gitkeep
+# Implementation reports (project-specific documentation)
+IMPLEMENTATION_REPORT.md
+*IMPLEMENTATION*REPORT*.md
 
 # Python virtual environment
 /venv/
