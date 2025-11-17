@@ -62,3 +62,10 @@ wheels/
 Thumbs.db
 .directory
 .Trash-*
+
+# Claude workflow files (untracked)
+CLAUDE.md
+CURRENT_STATE.md
+
+# Documentation (generated, not committed)
+docs/

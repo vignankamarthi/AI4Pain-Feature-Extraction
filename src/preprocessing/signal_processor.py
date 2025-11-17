@@ -1,10 +1,7 @@
 """
-SignalPreprocessor: Signal normalization and preprocessing for feature extraction.
+Signal normalization and preprocessing for feature extraction.
 
-This module provides preprocessing capabilities including:
-- Z-score normalization
-- Bandpass filtering (optional)
-- Signal validation and cleaning
+Z-score normalization, optional bandpass filtering for PPG/EDA/Resp signals.
 """
 
 import numpy as np
@@ -16,10 +13,9 @@ from ..utils.logger import SystemLogger
 
 class SignalPreprocessor:
     """
-    Preprocess physiological signals for entropy-based feature extraction.
+    Physiological signal preprocessing for entropy extraction.
 
-    This class provides methods for signal normalization, filtering,
-    and validation to ensure data quality before feature extraction.
+    Z-score normalization (default), optional bandpass filtering for artifact removal.
     """
 
     def __init__(self, sampling_frequency: float = 100.0):
@@ -38,11 +34,9 @@ class SignalPreprocessor:
 
     def z_score_normalize(self, signal: np.ndarray) -> np.ndarray:
         """
-        Apply z-score normalization to standardize the signal.
+        Apply z-score normalization (zero mean, unit variance).
 
-        Z-score normalization transforms the signal to have zero mean
-        and unit variance, making signals comparable across subjects
-        and sessions.
+        Makes signals comparable across subjects/sessions.
 
         Args:
             signal: Input signal array
@@ -51,26 +45,22 @@ class SignalPreprocessor:
             Z-score normalized signal
         """
         try:
-            # Remove NaN values for calculation
             clean_signal = signal[~np.isnan(signal)]
 
             if len(clean_signal) == 0:
                 self.logger.warning("Signal contains only NaN values")
                 return signal
 
-            # Calculate mean and standard deviation
             mean = np.mean(clean_signal)
             std = np.std(clean_signal)
 
-            # Handle edge case of zero standard deviation
             if std == 0:
                 self.logger.warning(
                     "Signal has zero standard deviation",
                     {"mean": mean, "unique_values": len(np.unique(clean_signal))}
                 )
-                return signal - mean  # Just center the signal
+                return signal - mean
 
-            # Apply z-score normalization
             normalized = (signal - mean) / std
 
             self.logger.debug(
@@ -90,10 +80,9 @@ class SignalPreprocessor:
                        highcut: float = 5.0,
                        order: int = 4) -> np.ndarray:
         """
-        Apply bandpass filter to the signal.
+        Apply bandpass filter (Butterworth, zero-phase).
 
-        This is particularly useful for PPG/BVP signals to remove
-        high-frequency noise and baseline drift.
+        Removes noise and baseline drift (useful for PPG/BVP signals).
 
         Args:
             signal: Input signal array
@@ -105,7 +94,6 @@ class SignalPreprocessor:
             Bandpass filtered signal
         """
         try:
-            # Check Nyquist frequency
             nyquist = 0.5 * self.fs
             if highcut >= nyquist:
                 self.logger.warning(
@@ -113,7 +101,6 @@ class SignalPreprocessor:
                 )
                 highcut = nyquist * 0.9
 
-            # Design the filter
             sos = scipy_signal.butter(
                 order,
                 [lowcut, highcut],
@@ -122,7 +109,6 @@ class SignalPreprocessor:
                 output='sos'
             )
 
-            # Apply the filter (forward-backward for zero phase)
             filtered = scipy_signal.sosfiltfilt(sos, signal)
 
             self.logger.debug(
@@ -138,10 +124,7 @@ class SignalPreprocessor:
 
     def preprocess_ppg(self, signal: np.ndarray) -> np.ndarray:
         """
-        Preprocess PPG/BVP signal with normalization and filtering.
-
-        This method replicates the notebook's preprocessing approach
-        for blood volume pulse signals.
+        Preprocess PPG/BVP signal (z-score + 0.5-5Hz bandpass).
 
         Args:
             signal: Raw PPG/BVP signal
@@ -149,10 +132,8 @@ class SignalPreprocessor:
         Returns:
             Preprocessed signal
         """
-        # First normalize
         normalized = self.z_score_normalize(signal)
 
-        # Then apply bandpass filter (0.5-5 Hz for heart rate)
         filtered = self.bandpass_filter(normalized, lowcut=0.5, highcut=5.0)
 
         self.logger.info("PPG preprocessing complete")
@@ -160,9 +141,7 @@ class SignalPreprocessor:
 
     def preprocess_eda(self, signal: np.ndarray) -> np.ndarray:
         """
-        Preprocess EDA signal with appropriate filtering.
-
-        EDA signals typically need different preprocessing than PPG.
+        Preprocess EDA signal (z-score only, EDA changes are slow).
 
         Args:
             signal: Raw EDA signal
@@ -170,19 +149,14 @@ class SignalPreprocessor:
         Returns:
             Preprocessed signal
         """
-        # Z-score normalize
         normalized = self.z_score_normalize(signal)
-
-        # Optional: Apply lowpass filter for EDA (typically < 1 Hz)
-        # EDA changes are slow, so we can remove high-frequency noise
-        # filtered = self.lowpass_filter(normalized, cutoff=1.0)
 
         self.logger.info("EDA preprocessing complete")
         return normalized
 
     def preprocess_resp(self, signal: np.ndarray) -> np.ndarray:
         """
-        Preprocess respiration signal.
+        Preprocess respiration signal (z-score only).
 
         Args:
             signal: Raw respiration signal
@@ -190,11 +164,7 @@ class SignalPreprocessor:
         Returns:
             Preprocessed signal
         """
-        # Z-score normalize
         normalized = self.z_score_normalize(signal)
-
-        # Optional: Bandpass for typical breathing rates (0.1-0.5 Hz)
-        # filtered = self.bandpass_filter(normalized, lowcut=0.1, highcut=0.5)
 
         self.logger.info("RESP preprocessing complete")
         return normalized

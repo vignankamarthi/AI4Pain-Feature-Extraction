@@ -1,8 +1,8 @@
 """
-Label Extractor: Extract pain state labels from signal column names.
+Pain state label extraction from signal column names.
 
-This module implements the exact label extraction logic from the reference notebook,
-converting signal identifiers into categorical (state) and numeric (binaryclass) labels.
+Regex-based extraction converting signal identifiers (e.g., "1_Baseline_1")
+to categorical states and numeric encodings (0=baseline, 1=low, 2=high, 3=rest).
 """
 
 import re
@@ -11,14 +11,13 @@ from typing import Tuple
 
 class LabelExtractor:
     """
-    Extract pain state labels from physiological signal column names.
+    Regex-based pain state extraction from signal identifiers.
 
-    Implements notebook logic for converting column identifiers like "1_Baseline_1",
-    "6_LOW_3", "12_HIGH_5" into categorical state labels and numeric binary classifications.
+    Maps column names (e.g., "1_Baseline_1", "6_LOW_3") to states and numeric encodings.
     """
 
     def __init__(self):
-        """Initialize the LabelExtractor with regex patterns."""
+        """Initialize regex patterns for state matching."""
         self.baseline_pattern = re.compile(r"baseline", re.IGNORECASE)
         self.high_pattern = re.compile(r"high", re.IGNORECASE)
         self.low_pattern = re.compile(r"low", re.IGNORECASE)
@@ -26,10 +25,7 @@ class LabelExtractor:
 
     def extract_state(self, signal_name: str) -> str:
         """
-        Extract state label from signal column name.
-
-        Uses regex matching to identify pain state from column identifier.
-        Exact replication of notebook extract_state() function.
+        Extract state label via regex matching.
 
         Args:
             signal_name: Column name from CSV (e.g., "1_Baseline_1", "6_HIGH_3")
@@ -43,8 +39,6 @@ class LabelExtractor:
             'baseline'
             >>> extractor.extract_state("6_HIGH_3")
             'high'
-            >>> extractor.extract_state("42_LOW_2")
-            'low'
         """
         signal_str = str(signal_name)
 
@@ -61,14 +55,9 @@ class LabelExtractor:
 
     def state_to_binaryclass(self, state: str) -> int:
         """
-        Convert state label to numeric binary classification.
+        Convert state to numeric encoding.
 
-        Implements notebook encoding:
-        - baseline -> 0
-        - low -> 1
-        - high -> 2
-        - rest -> 3
-        - unknown -> -1
+        Encoding: baseline=0, low=1, high=2, rest=3, unknown=-1
 
         Args:
             state: Categorical state label
@@ -77,7 +66,6 @@ class LabelExtractor:
             Numeric binary class encoding
 
         Examples:
-            >>> extractor = LabelExtractor()
             >>> extractor.state_to_binaryclass("baseline")
             0
             >>> extractor.state_to_binaryclass("high")
@@ -94,9 +82,7 @@ class LabelExtractor:
 
     def extract_labels(self, signal_name: str) -> Tuple[str, int]:
         """
-        Extract both state and binaryclass labels from signal name.
-
-        Convenience method combining state extraction and numeric encoding.
+        Extract (state, binaryclass) tuple from signal name.
 
         Args:
             signal_name: Column name from CSV
@@ -105,7 +91,6 @@ class LabelExtractor:
             Tuple of (state, binaryclass)
 
         Examples:
-            >>> extractor = LabelExtractor()
             >>> extractor.extract_labels("1_Baseline_1")
             ('baseline', 0)
             >>> extractor.extract_labels("6_HIGH_3")

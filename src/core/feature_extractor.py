@@ -1,8 +1,8 @@
 """
-FeatureExtractor: Main orchestrator for entropy-based feature extraction.
+Pipeline orchestrator for entropy-based feature extraction.
 
-This module coordinates the entire feature extraction pipeline, integrating
-data loading, preprocessing, entropy calculation, and result generation.
+Coordinates data loading, preprocessing, entropy calculation, and long-format
+output generation. Produces granular CSV files per dataset-signal combination.
 """
 
 import pandas as pd
@@ -23,10 +23,10 @@ from ..config.settings import Settings
 
 class FeatureExtractor:
     """
-    Main class for extracting entropy-based features from physiological signals.
+    Pipeline orchestrator for physiological signal entropy extraction.
 
-    This class orchestrates the entire pipeline from data loading to
-    feature table generation, exactly matching the notebook workflow.
+    Processes CSV files containing multi-column signals, generates 15 long-format
+    rows per signal (5d × 3tau grid), outputs granular dataset-signal CSV files.
     """
 
     def __init__(self, settings: Optional[Settings] = None):
@@ -48,7 +48,6 @@ class FeatureExtractor:
             self.settings.to_dict()
         )
 
-        # Validate paths
         self.settings.validate_paths()
 
     def process_single_signal(self,
@@ -70,31 +69,24 @@ class FeatureExtractor:
         """
         results = []
 
-        # Calculate NaN percentage before preprocessing
         total_length = len(signal_data)
         nan_count = np.sum(np.isnan(signal_data))
         nan_percentage = (nan_count / total_length * 100) if total_length > 0 else 0.0
 
-        # Extract labels
         state, binaryclass = self.label_extractor.extract_labels(signal_name)
 
-        # Remove NaN values for entropy calculation
         clean_signal = signal_data[~np.isnan(signal_data)]
         signal_length = len(clean_signal)
 
-        # Apply preprocessing if enabled
         if self.settings.apply_z_score and signal_length > 0:
             clean_signal = self.preprocessor.z_score_normalize(clean_signal)
-
-        # Calculate entropies for each dimension-tau combination
         for dim in self.settings.dimensions:
             for tau in self.settings.taus:
-                # Calculate all entropy measures
                 entropy_dict = self.entropy_calculator.calculate_all_entropies(
                     clean_signal, dim, tau
                 )
 
-                # Build long-format row matching notebook structure (16 columns)
+                # 16-column long-format row
                 result = {
                     'file_name': file_path,
                     'signal': signal_name,
@@ -115,8 +107,6 @@ class FeatureExtractor:
                 }
 
                 results.append(result)
-
-                # Force garbage collection
                 gc.collect()
 
         return results
@@ -125,10 +115,10 @@ class FeatureExtractor:
                            dataset: str,
                            signal_type: str) -> pd.DataFrame:
         """
-        Process all signals of a specific type and generate long-format output.
+        Process all CSV files for a signal type, generate long-format output.
 
-        Each CSV file contains multiple signal columns. Each signal generates 15 rows
-        (5 dimensions × 3 taus) in the output DataFrame.
+        Each CSV file may contain multiple columns (signals). Each signal produces
+        15 rows (5d × 3tau grid).
 
         Args:
             dataset: 'train', 'validation', or 'test'
@@ -139,14 +129,12 @@ class FeatureExtractor:
         """
         self.logger.info(f"Processing {signal_type} signals from {dataset}")
 
-        # Get signal directory
         signal_dir = Path(self.settings.data_dir) / dataset / signal_type
 
         if not signal_dir.exists():
             self.logger.warning(f"Directory not found: {signal_dir}")
             return pd.DataFrame()
 
-        # Get all CSV files and sort them numerically
         csv_files = sorted(
             [f for f in signal_dir.iterdir() if f.suffix == '.csv'],
             key=lambda x: self.data_loader.numerical_sort(x.name)
@@ -160,25 +148,20 @@ class FeatureExtractor:
 
         all_results = []
 
-        # Process each CSV file
         for csv_file in tqdm(csv_files, desc=f"Processing {signal_type}", unit="file",
                             disable=not self.settings.show_progress):
             try:
-                # Load CSV file
                 df = self.data_loader.load_csv_file(csv_file)
                 if df is None:
                     continue
 
-                # Process each signal column in the CSV
                 for column_name in df.columns:
                     try:
                         signal_data = df[column_name].values
 
-                        # Build full path for file_name column
                         relative_path = csv_file.relative_to(Path(self.settings.data_dir))
                         file_path = f"data/{relative_path}"
 
-                        # Process signal and get 15 rows (5 dims × 3 taus)
                         signal_results = self.process_single_signal(
                             signal_data,
                             file_path,
@@ -201,10 +184,8 @@ class FeatureExtractor:
                     context={"file": csv_file.name}
                 )
 
-        # Convert to DataFrame
         df_output = pd.DataFrame(all_results)
 
-        # Define exact column order from notebook
         column_order = [
             'file_name', 'signal', 'signallength',
             'pe', 'comp', 'fisher_shannon', 'fisher_info',
@@ -212,7 +193,6 @@ class FeatureExtractor:
             'dimension', 'tau', 'state', 'binaryclass', 'nan_percentage'
         ]
 
-        # Ensure all columns exist and reorder
         for col in column_order:
             if col not in df_output.columns:
                 df_output[col] = np.nan
@@ -230,12 +210,9 @@ class FeatureExtractor:
                        dataset: str,
                        signal_types: Optional[List[str]] = None) -> Dict[str, pd.DataFrame]:
         """
-        Process specified signal types in a dataset with granular file output.
+        Process signal types in dataset, save granular CSV files.
 
-        Saves separate CSV files for each dataset × signal_type combination:
-        - results/results_train_bvp.csv
-        - results/results_train_eda.csv
-        - etc.
+        Generates per-combination outputs: results_{dataset}_{signal_type}.csv
 
         Args:
             dataset: 'train', 'validation', or 'test'
@@ -247,20 +224,17 @@ class FeatureExtractor:
         self.logger.info(f"Starting {dataset} dataset processing")
         start_time = time.time()
 
-        # Use provided signal types or default to all
         if signal_types is None:
             signal_types = self.settings.signal_types
 
         results = {}
 
-        # Process each signal type
         for signal_type in signal_types:
             self.logger.info(f"Processing {dataset}/{signal_type}")
 
             df = self.process_signal_type(dataset, signal_type)
             results[signal_type] = df
 
-            # Save granular output file: results_<dataset>_<signal_type>.csv
             if not df.empty:
                 output_filename = f"results_{dataset}_{signal_type.lower()}.csv"
                 output_file = Path(self.settings.results_dir) / output_filename
@@ -285,9 +259,9 @@ class FeatureExtractor:
                     datasets: Optional[List[str]] = None,
                     signal_types: Optional[List[str]] = None) -> Dict[str, Dict[str, pd.DataFrame]]:
         """
-        Run feature extraction pipeline for specified datasets and signal types.
+        Execute full extraction pipeline with multi-select datasets and signals.
 
-        Generates granular output files: results_<dataset>_<signal_type>.csv
+        Outputs granular CSV files per dataset-signal combination.
 
         Args:
             datasets: List of datasets to process (None = all from settings)
@@ -297,16 +271,9 @@ class FeatureExtractor:
             Nested dictionary: {dataset: {signal_type: DataFrame}}
 
         Examples:
-            # Process all datasets, all signal types
             run_pipeline()
-
-            # Process specific datasets
             run_pipeline(datasets=['train', 'test'])
-
-            # Process specific signal types
             run_pipeline(signal_types=['Bvp', 'Eda'])
-
-            # Process specific combination
             run_pipeline(datasets=['train'], signal_types=['Bvp'])
         """
         self.logger.info("=" * 60)
@@ -315,29 +282,24 @@ class FeatureExtractor:
 
         pipeline_start = time.time()
 
-        # Use provided datasets or default to settings
         if datasets is None:
             datasets = self.settings.datasets
 
         all_results = {}
 
-        # Process each dataset
         for dataset_name in datasets:
             self.logger.info(f"Processing {dataset_name} dataset...")
 
             dataset_results = self.process_dataset(dataset_name, signal_types)
             all_results[dataset_name] = dataset_results
 
-            # Force garbage collection between datasets
             gc.collect()
 
-        # Pipeline summary
         pipeline_time = time.time() - pipeline_start
 
         summary = self._generate_summary(all_results, pipeline_time)
         self.logger.info("Pipeline Summary", summary)
 
-        # Print summary to console
         self._print_summary(summary)
 
         return all_results
@@ -346,7 +308,7 @@ class FeatureExtractor:
                          results: Dict[str, Dict[str, pd.DataFrame]],
                          elapsed_time: float) -> Dict[str, Any]:
         """
-        Generate summary statistics for the pipeline run.
+        Generate pipeline run statistics.
 
         Args:
             results: Pipeline results (nested dict: dataset -> signal_type -> DataFrame)
@@ -373,7 +335,7 @@ class FeatureExtractor:
 
     def _print_summary(self, summary: Dict[str, Any]) -> None:
         """
-        Print formatted summary to console.
+        Print formatted pipeline summary.
 
         Args:
             summary: Summary dictionary

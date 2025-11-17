@@ -1,13 +1,9 @@
 """
-EntropyCalculator: Comprehensive entropy-based feature extraction using Ordpy.
+Ordpy-based entropy calculator for physiological signals.
 
-This module implements entropy measures for physiological signal analysis:
-- Permutation Entropy (PE)
-- Statistical Complexity
-- Fisher-Shannon Entropy
-- Fisher Information
-- Renyi Entropy and Complexity
-- Tsallis Entropy and Complexity
+Implements 8 information-theoretic measures across parametrized temporal scales
+(embedding dimension d, time delay tau). Wraps ordpy with validation, NaN handling,
+and structured logging.
 """
 
 import numpy as np
@@ -21,7 +17,7 @@ from ..utils.logger import SystemLogger
 
 @dataclass
 class EntropyFeatures:
-    """Container for all entropy-based features."""
+    """8-measure entropy feature vector for single (d, tau) combination."""
     pe: float
     comp: float
     fisher_shannon: float
@@ -36,14 +32,14 @@ class EntropyFeatures:
 
 class EntropyCalculator:
     """
-    Calculate multiple entropy measures from physiological signals using Ordpy.
+    Ordpy wrapper for batch entropy extraction with validation.
 
-    This class provides methods to compute information-theoretic features
-    that quantify signal complexity, predictability, and information content.
+    Handles edge cases: insufficient signal length, low unique value count, NaN/Inf results.
+    Returns NaN-filled dicts on failure for downstream robustness.
     """
 
     def __init__(self):
-        """Initialize the EntropyCalculator with logging."""
+        """Initialize with structured logger."""
         self.logger = SystemLogger()
         self.logger.info("EntropyCalculator initialized")
 
@@ -52,9 +48,10 @@ class EntropyCalculator:
                                dimension: int,
                                tau: int) -> Dict[str, float]:
         """
-        Calculate all entropy measures for a signal.
+        Compute all 8 entropy measures for (signal, d, tau) triplet.
 
-        This method exactly replicates the notebook workflow using Ordpy functions.
+        Returns NaN-filled dict on failure (signal too short, insufficient unique values,
+        ordpy exceptions). Never raises - critical for pipeline robustness.
 
         Args:
             signal: Input time series data
@@ -64,7 +61,7 @@ class EntropyCalculator:
         Returns:
             Dictionary containing all entropy measures
         """
-        # Initialize result dictionary with NaN values
+        # Default to NaN for failed calculations
         result = {
             'pe': np.nan,
             'comp': np.nan,
@@ -80,9 +77,9 @@ class EntropyCalculator:
         }
 
         try:
-            # Remove NaN values from signal
             clean_signal = signal[~np.isnan(signal)]
 
+            # Validate minimum length for ordpy permutation patterns
             if len(clean_signal) < dimension * tau:
                 self.logger.warning(
                     f"Signal too short for d={dimension}, tau={tau}",
@@ -90,7 +87,7 @@ class EntropyCalculator:
                 )
                 return result
 
-            # Check for sufficient unique values
+            # Ordpy requires at least d unique values for permutation patterns
             unique_values = np.unique(clean_signal)
             if len(unique_values) < dimension:
                 self.logger.warning(
@@ -99,31 +96,27 @@ class EntropyCalculator:
                 )
                 return result
 
-            # Exact notebook implementation
             with warnings.catch_warnings():
                 warnings.simplefilter("always")
 
-                # Calculate complexity-entropy (PE and complexity)
+                # Ordpy tuple unpacking: (entropy, complexity) pairs
                 ans1 = ordpy.complexity_entropy(clean_signal, dx=dimension, taux=tau)
                 pe = ans1[0]
                 comp = ans1[1]
 
-                # Calculate Fisher-Shannon entropy and Fisher Information
                 ans2 = ordpy.fisher_shannon(clean_signal, dx=dimension, taux=tau)
-                fisher_shannon = ans2[0]  # Fisher-Shannon entropy
-                fisher_info = ans2[1]     # Fisher Information
+                fisher_shannon = ans2[0]
+                fisher_info = ans2[1]
 
-                # Calculate Renyi entropy and complexity
                 ans3 = ordpy.renyi_complexity_entropy(clean_signal, dx=dimension, taux=tau)
                 renyipe = ans3[0]
                 renyicomp = ans3[1]
 
-                # Calculate Tsallis entropy and complexity
                 ans4 = ordpy.tsallis_complexity_entropy(clean_signal, dx=dimension, taux=tau)
                 tsallispe = ans4[0]
                 tsalliscomp = ans4[1]
 
-            # Validate and store results
+            # NaN/Inf sanitization before returning
             result['pe'] = self._validate_value(pe, 'PE')
             result['comp'] = self._validate_value(comp, 'Complexity')
             result['fisher_shannon'] = self._validate_value(fisher_shannon, 'Fisher-Shannon')
@@ -155,7 +148,7 @@ class EntropyCalculator:
 
     def _validate_value(self, value: float, name: str) -> float:
         """
-        Validate entropy values for numerical issues.
+        Sanitize NaN/Inf from ordpy outputs (edge case: numerical instability).
 
         Args:
             value: The calculated value
@@ -174,7 +167,7 @@ class EntropyCalculator:
                                      dimension: int,
                                      tau: int) -> float:
         """
-        Calculate only permutation entropy.
+        Extract PE only (for single-measure use cases).
 
         Args:
             signal: Input time series
@@ -295,7 +288,10 @@ class EntropyCalculator:
                        dimensions: List[int] = [3, 4, 5, 6, 7],
                        taus: List[int] = [1, 2, 3]) -> List[Dict[str, float]]:
         """
-        Calculate entropies for multiple dimension-tau combinations.
+        Compute entropy grid: len(dimensions) × len(taus) parameter sweep.
+
+        Returns list of dicts (long-format output). Processes lower dimensions first
+        (faster execution, less memory). Forces GC after each to prevent accumulation.
 
         Args:
             signal: Input time series
@@ -313,7 +309,7 @@ class EntropyCalculator:
             {"combinations": total_combinations, "dimensions": dimensions, "taus": taus}
         )
 
-        for dim in sorted(dimensions):  # Process lower dimensions first
+        for dim in sorted(dimensions):
             for tau in taus:
                 start_time = self.logger.start_operation(f"Entropy d={dim}, tau={tau}")
 
@@ -322,7 +318,6 @@ class EntropyCalculator:
 
                 self.logger.end_operation(f"Entropy d={dim}, tau={tau}", start_time)
 
-                # Force garbage collection after each calculation
                 import gc
                 gc.collect()
 

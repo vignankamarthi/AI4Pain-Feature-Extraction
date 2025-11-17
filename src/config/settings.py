@@ -1,7 +1,7 @@
 """
-Settings: Configuration management for AI4Pain Feature Extraction.
+Central configuration for AI4Pain feature extraction pipeline.
 
-This module centralizes all configuration parameters for the feature extraction pipeline.
+Dataclass-based settings with validation and path management.
 """
 
 from dataclasses import dataclass, field
@@ -12,74 +12,59 @@ from pathlib import Path
 @dataclass
 class Settings:
     """
-    Central configuration for the feature extraction pipeline.
+    Pipeline configuration with validation and path management.
 
-    All parameters can be overridden via initialization or modified at runtime.
+    All parameters overridable via initialization or runtime modification.
     """
 
-    # Data paths
     data_dir: str = "data"
     results_dir: str = "results"
     logs_dir: str = "logs"
 
-    # Signal types to process
     signal_types: List[str] = field(default_factory=lambda: ['Bvp', 'Eda', 'Resp', 'SpO2'])
 
-    # Entropy calculation parameters (matching notebook)
     dimensions: List[int] = field(default_factory=lambda: [3, 4, 5, 6, 7])
     taus: List[int] = field(default_factory=lambda: [1, 2, 3])
 
-    # Preprocessing options
     apply_z_score: bool = True
-    apply_filtering: bool = False  # Set to True to enable bandpass filtering
+    apply_filtering: bool = False
 
-    # Sampling frequency (Hz)
     sampling_frequency: float = 100.0
 
-    # Output options
-    include_pe_verification: bool = False  # Include PE from fisher_shannon for verification
-    save_individual_signals: bool = True   # Save features for each signal type separately
-    save_concatenated: bool = True          # Save concatenated dataset for ML
+    include_pe_verification: bool = False
+    save_individual_signals: bool = True
+    save_concatenated: bool = True
 
-    # Performance options
-    use_multiprocessing: bool = False  # Enable for parallel processing (future enhancement)
-    max_workers: int = 4               # Number of parallel workers
+    use_multiprocessing: bool = False
+    max_workers: int = 4
 
-    # Validation thresholds
-    max_nan_percentage: float = 50.0   # Maximum allowed NaN percentage in signals
-    min_unique_values: int = 3         # Minimum unique values for valid signal
+    max_nan_percentage: float = 50.0
+    min_unique_values: int = 3
 
-    # File naming patterns
     train_prefix: str = "features_train"
     validation_prefix: str = "features_validation"
     test_prefix: str = "features_test"
     combined_filename: str = "features_complete.csv"
 
-    # Datasets to process
     datasets: List[str] = field(default_factory=lambda: ['train', 'validation', 'test'])
 
-    # Progress bar options
     show_progress: bool = True
-    nested_progress: bool = True  # Show nested progress bars
+    nested_progress: bool = True
 
-    # Logging options
     log_level: str = "INFO"
     clear_log_on_start: bool = False
 
     def __post_init__(self):
-        """Validate and process settings after initialization."""
-        # Convert string paths to Path objects
+        """Validate settings and convert paths to Path objects."""
         self.data_path = Path(self.data_dir)
         self.results_path = Path(self.results_dir)
         self.logs_path = Path(self.logs_dir)
 
-        # Validate dimensions and taus
         if not self.dimensions:
             raise ValueError("At least one dimension must be specified")
         if not self.taus:
             raise ValueError("At least one tau value must be specified")
 
-        # Sort dimensions for efficient processing (lower dimensions first)
         self.dimensions = sorted(self.dimensions)
 
     def get_output_filename(self,
