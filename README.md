@@ -15,7 +15,6 @@ This system implements five entropy-based complexity measures across multiple te
 - **Multi-signal processing**: BVP, EDA, Respiration, SpO2
 - **4-class pain states**: Baseline, Low, High, Rest (+ unknown handling)
 - **Robust preprocessing**: Z-score normalization, NaN tracking, granular file organization
-- **Notebook-aligned**: Exact structure matching reference Jupyter analysis
 
 ---
 
@@ -54,7 +53,7 @@ data/
 
 **CSV format**: Each column = one participant trial, rows = time samples
 
-**Note**: The `data/test/`, `data/train/`, and `data/validation/` directories are preserved as placeholders in the repository via `.gitkeep` files. All data files within these directories are gitignored for privacy.
+**Note**: The `data/test/`, `data/train/`, and `data/validation/` directories are preserved as placeholders in the repository via `.gitkeep` files. All data files within these directories are gitignored for data integrity. 
 
 ### Auto-Generated Folders
 
@@ -199,7 +198,7 @@ data/train/Bvp/6.csv,6_Baseline_1,5950,0.992063,0.007686,0.992063,0.004582,0.992
 - **Total runtime**: ~4332 seconds for 7,872 samples
 - **Memory usage**: ~2-3 GB peak
 
-**For 145× speedup with identical results, see [Rust implementation](../ai4pain-rust/)**
+**For 201× speedup with identical results, see [Rust implementation](https://github.com/vignankamarthi/Feature-Extraction-Rust)**
 
 ---
 
@@ -249,17 +248,6 @@ AI4Pain-Feature-Extraction-V2/
 ├── .gitignore                    # Excludes data/, logs/, results/
 └── README.md                     # This file
 ```
-
----
-
-## Validation
-
-This implementation maintains **100% consistency** with the reference Jupyter notebook:
-- Exact 16-column long-format structure
-- Both Fisher-Shannon AND Fisher Information extraction (ordpy indices [0] and [1])
-- 4-class pain state labeling (baseline=0, low=1, high=2, rest=3)
-- Granular file organization pattern matching analysis workflow
-
 ---
 
 ## Troubleshooting
@@ -313,17 +301,3 @@ This implementation maintains **100% consistency** with the reference Jupyter no
   institution = {Northeastern University}
 }
 ```
-
----
-
-## Related Implementations
-
-**Rust version** (145× faster, identical results): [../ai4pain-rust/](../ai4pain-rust/)
-- See [RUST_IMPLEMENTATION_GUIDE.md](../ai4pain-rust/RUST_IMPLEMENTATION_GUIDE.md) for Python → Rust translation guide
-
----
-
-**Version**: 2.0.0
-**Author**: Vignan Kamarthi
-**Organization**: Northeastern University
-**Status**: Production Ready
