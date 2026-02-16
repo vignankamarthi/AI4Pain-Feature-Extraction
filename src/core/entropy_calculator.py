@@ -108,11 +108,11 @@ class EntropyCalculator:
                 fisher_shannon = ans2[0]
                 fisher_info = ans2[1]
 
-                ans3 = ordpy.renyi_complexity_entropy(clean_signal, dx=dimension, taux=tau)
+                ans3 = ordpy.renyi_complexity_entropy(clean_signal, alpha=2, dx=dimension, taux=tau)
                 renyipe = ans3[0]
                 renyicomp = ans3[1]
 
-                ans4 = ordpy.tsallis_complexity_entropy(clean_signal, dx=dimension, taux=tau)
+                ans4 = ordpy.tsallis_complexity_entropy(clean_signal, q=2, dx=dimension, taux=tau)
                 tsallispe = ans4[0]
                 tsalliscomp = ans4[1]
 
@@ -248,7 +248,7 @@ class EntropyCalculator:
         """
         try:
             clean_signal = signal[~np.isnan(signal)]
-            result = ordpy.renyi_complexity_entropy(clean_signal, dx=dimension, taux=tau)
+            result = ordpy.renyi_complexity_entropy(clean_signal, alpha=2, dx=dimension, taux=tau)
             return (
                 self._validate_value(result[0], 'Renyi PE'),
                 self._validate_value(result[1], 'Renyi Complexity')
@@ -274,7 +274,7 @@ class EntropyCalculator:
         """
         try:
             clean_signal = signal[~np.isnan(signal)]
-            result = ordpy.tsallis_complexity_entropy(clean_signal, dx=dimension, taux=tau)
+            result = ordpy.tsallis_complexity_entropy(clean_signal, q=2, dx=dimension, taux=tau)
             return (
                 self._validate_value(result[0], 'Tsallis PE'),
                 self._validate_value(result[1], 'Tsallis Complexity')

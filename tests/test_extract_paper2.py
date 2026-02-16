@@ -29,6 +29,7 @@ from extract_paper2 import (
     compute_silhouette_indices,
     ENTROPY_PAIRS,
 )
+from src.core.entropy_calculator import EntropyCalculator
 
 
 # ---------------------------------------------------------------------------
@@ -351,3 +352,55 @@ class TestOutputFormat:
         df = pd.DataFrame([row])
         for col in expected_cols:
             assert col in df.columns
+
+
+# ===================================================================
+# Test 8: q=2 / alpha=2 verification
+# ===================================================================
+
+class TestGeneralizedEntropyParameters:
+    """Verify Renyi (alpha=2) and Tsallis (q=2) diverge from Shannon PE."""
+
+    def test_renyi_differs_from_shannon(self):
+        """At alpha=2, Renyi PE should NOT equal Shannon PE."""
+        calc = EntropyCalculator()
+        rng = np.random.default_rng(42)
+        signal = rng.standard_normal(500)
+        result = calc.calculate_all_entropies(signal, dimension=5, tau=1)
+        assert not np.isnan(result["pe"])
+        assert not np.isnan(result["renyipe"])
+        assert result["pe"] != result["renyipe"], \
+            "Renyi PE should differ from Shannon PE at alpha=2"
+
+    def test_tsallis_differs_from_shannon(self):
+        """At q=2, Tsallis PE should NOT equal Shannon PE."""
+        calc = EntropyCalculator()
+        rng = np.random.default_rng(42)
+        signal = rng.standard_normal(500)
+        result = calc.calculate_all_entropies(signal, dimension=5, tau=1)
+        assert not np.isnan(result["pe"])
+        assert not np.isnan(result["tsallispe"])
+        assert result["pe"] != result["tsallispe"], \
+            "Tsallis PE should differ from Shannon PE at q=2"
+
+    def test_renyi_complexity_differs(self):
+        """At alpha=2, Renyi complexity should NOT equal Shannon complexity."""
+        calc = EntropyCalculator()
+        rng = np.random.default_rng(42)
+        signal = rng.standard_normal(500)
+        result = calc.calculate_all_entropies(signal, dimension=5, tau=1)
+        assert not np.isnan(result["comp"])
+        assert not np.isnan(result["renyicomp"])
+        assert result["comp"] != result["renyicomp"], \
+            "Renyi complexity should differ from Shannon complexity at alpha=2"
+
+    def test_tsallis_complexity_differs(self):
+        """At q=2, Tsallis complexity should NOT equal Shannon complexity."""
+        calc = EntropyCalculator()
+        rng = np.random.default_rng(42)
+        signal = rng.standard_normal(500)
+        result = calc.calculate_all_entropies(signal, dimension=5, tau=1)
+        assert not np.isnan(result["comp"])
+        assert not np.isnan(result["tsalliscomp"])
+        assert result["comp"] != result["tsalliscomp"], \
+            "Tsallis complexity should differ from Shannon complexity at q=2"
