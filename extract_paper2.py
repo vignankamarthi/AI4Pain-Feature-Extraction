@@ -107,9 +107,10 @@ def filter_classes(df: pd.DataFrame, include_rest: bool = False) -> pd.DataFrame
 
 def compute_silhouette_indices(entropy_df: pd.DataFrame) -> pd.DataFrame:
     """
-    Compute silhouette scores for each (signal_type, d, tau, entropy_pair).
+    Compute binary silhouette scores for each (signal_type, d, tau, entropy_pair).
 
-    For each pair, use the 2D feature space (x_col, y_col) and class labels.
+    Collapses multi-class labels into binary: baseline(0) vs pain(1).
+    For each pair, use the 2D feature space (x_col, y_col).
     Total expected: n_signals x n_d x n_tau x 4 pairs.
 
     Returns DataFrame with columns:
@@ -121,7 +122,9 @@ def compute_silhouette_indices(entropy_df: pd.DataFrame) -> pd.DataFrame:
     groups = entropy_df.groupby(["signal_type", "dimension", "tau"])
 
     for (sig_type, dim, tau), group in groups:
-        labels = group["binaryclass"].values
+        # Binary labels: baseline(0) vs pain(1) -- collapse low(1)+high(2) into pain
+        raw_labels = group["binaryclass"].values
+        labels = np.where(raw_labels >= 1, 1, 0)
         n_classes = len(np.unique(labels))
         n_samples = len(labels)
 
@@ -258,17 +261,11 @@ def run_extraction(
                 print(f"  Skipping subject {subject_id}: both files empty")
                 continue
 
-            # Per-subject minimum length truncation
-            min_len = find_subject_min_length(eda_df, bvp_df)
-            if min_len == 0:
-                print(f"  Skipping subject {subject_id}: min length is 0")
-                continue
-
-            eda_trunc = truncate_to_length(eda_df, min_len)
-            bvp_trunc = truncate_to_length(bvp_df, min_len)
+            # Use entire time series (no truncation per PI feedback 2026-02-13)
+            # Each signal column is used at its full length; NaNs stripped downstream
 
             # Process each signal type
-            for sig_type, sig_df in [("Eda", eda_trunc), ("Bvp", bvp_trunc)]:
+            for sig_type, sig_df in [("Eda", eda_df), ("Bvp", bvp_df)]:
                 for col_name in sig_df.columns:
                     signal_data = sig_df[col_name].values
                     clean_signal = signal_data[~np.isnan(signal_data)]
