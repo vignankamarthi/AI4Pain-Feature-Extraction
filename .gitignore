@@ -66,6 +66,8 @@ Thumbs.db
 # Claude workflow files (untracked)
 CLAUDE.md
 CURRENT_STATE.md
+MEMORY.md
+ANTIPATTERNS.md
 
 # Documentation (generated, not committed)
 docs/
