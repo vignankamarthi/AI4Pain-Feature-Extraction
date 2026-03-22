@@ -204,7 +204,6 @@ def run_concatenated_extraction(
     output_dir: str = "results",
     dimensions: list = None,
     taus: list = None,
-    apply_z_score: bool = True,
 ):
     """
     Run concatenated silhouette analysis pipeline.
@@ -212,9 +211,8 @@ def run_concatenated_extraction(
     For each subject and signal type:
       1. Group columns by condition (baseline, low, high)
       2. Concatenate all columns within each condition into one long series
-      3. Z-score normalize each concatenated series
-      4. Compute entropy features at each (d, tau)
-      5. Compute binary silhouette (baseline=0 vs low+high=1)
+      3. Compute entropy features at each (d, tau)
+      4. Compute binary silhouette (baseline=0 vs low+high=1)
 
     Outputs:
       - paper2_concatenated_entropy_pairs.csv
@@ -279,13 +277,6 @@ def run_concatenated_extraction(
                     if len(concat_signal) == 0:
                         print(f"  Empty concatenated signal for {subject_id} {sig_type} {condition}")
                         continue
-
-                    # Z-score normalization on concatenated series
-                    if apply_z_score and np.std(concat_signal) > 0:
-                        concat_signal = (
-                            (concat_signal - np.mean(concat_signal))
-                            / np.std(concat_signal)
-                        )
 
                     binary_label = CONDITION_TO_BINARY[condition]
 
@@ -390,11 +381,6 @@ def main():
         default="results",
         help="Path to output directory (default: results)",
     )
-    parser.add_argument(
-        "--no-zscore",
-        action="store_true",
-        help="Disable z-score normalization",
-    )
     args = parser.parse_args()
 
     dimensions = [int(d.strip()) for d in args.dimensions.split(",")]
@@ -405,7 +391,6 @@ def main():
         output_dir=args.output_dir,
         dimensions=dimensions,
         taus=taus_list,
-        apply_z_score=not args.no_zscore,
     )
 
 

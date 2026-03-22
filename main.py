@@ -57,8 +57,6 @@ def parse_args():
             Comma-separated time delays
         - filter : bool
             Whether to apply bandpass filtering
-        - no_zscore : bool
-            Whether to disable z-score normalization
         - no_progress : bool
             Whether to disable progress bars
     """
@@ -114,13 +112,7 @@ Examples:
     parser.add_argument(
         '--filter',
         action='store_true',
-        help='Apply bandpass filtering (in addition to z-score)'
-    )
-
-    parser.add_argument(
-        '--no-zscore',
-        action='store_true',
-        help='Disable z-score normalization'
+        help='Apply bandpass filtering'
     )
 
     # Output options
@@ -240,7 +232,6 @@ def main():
     settings = Settings(
         dimensions=dimensions,
         taus=taus,
-        apply_z_score=not args.no_zscore,
         apply_filtering=args.filter,
         show_progress=not args.no_progress
     )
@@ -251,7 +242,6 @@ def main():
         "signal_types": args.signal_type,
         "dimensions": dimensions,
         "taus": taus,
-        "z_score": not args.no_zscore,
         "filtering": args.filter
     })
 

@@ -14,7 +14,6 @@ from tqdm import tqdm
 import time
 
 from .entropy_calculator import EntropyCalculator
-from ..preprocessing.signal_processor import SignalPreprocessor
 from ..preprocessing.label_extractor import LabelExtractor
 from ..utils.data_loader import DataLoader
 from ..utils.logger import SystemLogger
@@ -39,7 +38,6 @@ class FeatureExtractor:
         self.settings = settings or Settings()
         self.logger = SystemLogger()
         self.entropy_calculator = EntropyCalculator()
-        self.preprocessor = SignalPreprocessor(self.settings.sampling_frequency)
         self.label_extractor = LabelExtractor()
         self.data_loader = DataLoader(self.settings.data_dir)
 
@@ -78,8 +76,6 @@ class FeatureExtractor:
         clean_signal = signal_data[~np.isnan(signal_data)]
         signal_length = len(clean_signal)
 
-        if self.settings.apply_z_score and signal_length > 0:
-            clean_signal = self.preprocessor.z_score_normalize(clean_signal)
         for dim in self.settings.dimensions:
             for tau in self.settings.taus:
                 entropy_dict = self.entropy_calculator.calculate_all_entropies(

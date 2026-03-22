@@ -26,7 +26,6 @@ class Settings:
     dimensions: List[int] = field(default_factory=lambda: [3, 4, 5, 6, 7])
     taus: List[int] = field(default_factory=lambda: [1, 2, 3])
 
-    apply_z_score: bool = True
     apply_filtering: bool = False
 
     sampling_frequency: float = 100.0
@@ -126,7 +125,6 @@ class Settings:
             'dimensions': self.dimensions,
             'taus': self.taus,
             'signal_types': self.signal_types,
-            'apply_z_score': self.apply_z_score,
             'apply_filtering': self.apply_filtering,
             'sampling_frequency': self.sampling_frequency,
             'total_combinations': len(self.dimensions) * len(self.taus)
@@ -157,7 +155,7 @@ class Settings:
             f"  Dimensions: {self.dimensions}\n"
             f"  Taus: {self.taus}\n"
             f"  Signals: {self.signal_types}\n"
-            f"  Preprocessing: z-score={self.apply_z_score}, filter={self.apply_filtering}\n"
+            f"  Preprocessing: filter={self.apply_filtering}\n"
             f")"
         )
 

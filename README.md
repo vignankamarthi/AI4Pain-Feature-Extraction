@@ -14,7 +14,7 @@ This system implements five entropy-based complexity measures across multiple te
 - **Long-format output**: 15 rows per signal (5 dimensions × 3 time delays), 16 columns per row
 - **Multi-signal processing**: BVP, EDA, Respiration, SpO2
 - **4-class pain states**: Baseline, Low, High, Rest (+ unknown handling)
-- **Robust preprocessing**: Z-score normalization, NaN tracking, granular file organization
+- **Robust preprocessing**: NaN tracking, granular file organization
 
 ---
 
@@ -80,9 +80,6 @@ python main.py --dataset train --signal-type Bvp
 # Custom dimensions and time delays
 python main.py --dimensions 4,5,6 --taus 1,2
 
-# Disable z-score normalization
-python main.py --no-zscore
-
 # Disable progress bars
 python main.py --no-progress
 ```
@@ -109,8 +106,7 @@ src/
 │   ├── entropy_calculator.py    # 8 entropy implementations (ordpy-based)
 │   └── feature_extractor.py     # Long-format orchestration
 ├── preprocessing/
-│   ├── label_extractor.py       # State and binaryclass extraction
-│   └── signal_processor.py      # Z-score normalization
+│   └── label_extractor.py       # State and binaryclass extraction
 └── utils/
     ├── data_loader.py            # CSV I/O
     └── logger.py                 # Structured logging
@@ -224,7 +220,6 @@ data/train/Bvp/6.csv,6_Baseline_1,5950,0.992063,0.007686,0.992063,0.004582,0.992
 - `--signal-type`: Space-separated signal types (Bvp Eda Resp SpO2), default: all four
 - `--dimensions`: Comma-separated embedding dimensions (default: 3,4,5,6,7)
 - `--taus`: Comma-separated time delays (default: 1,2,3)
-- `--no-zscore`: Disable z-score normalization (default: on)
 - `--no-progress`: Disable progress bars (default: on)
 
 **Programmatic configuration**: Use `src/config/settings.py` Settings class

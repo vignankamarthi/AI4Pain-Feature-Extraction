@@ -208,7 +208,6 @@ def run_extraction(
     dimensions: list = None,
     taus: list = None,
     include_rest: bool = False,
-    apply_z_score: bool = True,
 ):
     """
     Run the full Paper 2 extraction pipeline.
@@ -272,10 +271,6 @@ def run_extraction(
 
                     if len(clean_signal) == 0:
                         continue
-
-                    # Z-score normalization
-                    if apply_z_score and np.std(clean_signal) > 0:
-                        clean_signal = (clean_signal - np.mean(clean_signal)) / np.std(clean_signal)
 
                     # Extract state and class label
                     state, binaryclass = label_extractor.extract_labels(col_name)
@@ -373,11 +368,6 @@ def main():
         default="results",
         help="Path to output directory (default: results)",
     )
-    parser.add_argument(
-        "--no-zscore",
-        action="store_true",
-        help="Disable z-score normalization",
-    )
     args = parser.parse_args()
 
     dimensions = [int(d.strip()) for d in args.dimensions.split(",")]
@@ -389,7 +379,6 @@ def main():
         dimensions=dimensions,
         taus=taus_list,
         include_rest=args.include_rest,
-        apply_z_score=not args.no_zscore,
     )
 
 
